@@ -1,0 +1,17 @@
+# RTX 2080 Ti 11GB — local dev / pre-diagnostic
+defaults:
+  - base
+
+hardware:
+  name: rtx2080ti
+  fp16: true
+  bf16: false
+  micro_batch_size: 1
+  gradient_checkpointing: true
+  max_length: 1024
+
+models:
+  teacher_inference:
+  # 8B INT4 for small-sample pre-diagnostic only
+    load_in_4bit: true
+    device_map: auto

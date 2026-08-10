@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg
+
+# Environment
+.env
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Data & artifacts (large files — track splits manifest only)
+data/raw/**
+!data/raw/.gitkeep
+data/processed/**
+!data/processed/.gitkeep
+data/splits/**
+!data/splits/.gitkeep
+data/diagnostics/**
+!data/diagnostics/.gitkeep
+
+# Model outputs
+outputs/**
+!outputs/.gitkeep
+reports/*.md
+!reports/.gitkeep
+!reports/*_template.md
+
+# HF / torch cache
+.cache/
+hf_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+tensorboard/
+wandb/

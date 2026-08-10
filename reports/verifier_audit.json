@@ -1,0 +1,437 @@
+{
+  "gold_precision": 1.0,
+  "gold_total": 200,
+  "class_counts": {
+    "correct": 200,
+    "wrong_arguments": 214,
+    "invalid": 200,
+    "wrong_function": 145
+  },
+  "gate_passed": true,
+  "samples": [
+    {
+      "id": "toolace_1914",
+      "candidate_name": "Get Daily Forex Data",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_1914",
+      "candidate_name": "Get Funding Rate History",
+      "class": "wrong_arguments",
+      "sub": "wrong_type",
+      "details": [
+        "wrong_type:end,start"
+      ]
+    },
+    {
+      "id": "toolace_1914",
+      "candidate_name": "Get Daily Forex Data",
+      "class": "wrong_arguments",
+      "sub": "wrong_key",
+      "details": [
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_1914",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    },
+    {
+      "id": "toolace_6322",
+      "candidate_name": "Get Vessels by Ship Name",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_6322",
+      "candidate_name": "QueryKeywords",
+      "class": "wrong_function",
+      "sub": null,
+      "details": [
+        "function_name_mismatch"
+      ]
+    },
+    {
+      "id": "toolace_6322",
+      "candidate_name": "Get Vessels by Ship Name",
+      "class": "wrong_arguments",
+      "sub": "wrong_key",
+      "details": [
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_6322",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    },
+    {
+      "id": "toolace_6065",
+      "candidate_name": "getMostRecentCovid19Statistics",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_6065",
+      "candidate_name": "Get Top NFT Collections",
+      "class": "wrong_function",
+      "sub": null,
+      "details": [
+        "function_name_mismatch"
+      ]
+    },
+    {
+      "id": "toolace_6065",
+      "candidate_name": "getMostRecentCovid19Statistics",
+      "class": "wrong_arguments",
+      "sub": "wrong_key",
+      "details": [
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_6065",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    },
+    {
+      "id": "toolace_10253",
+      "candidate_name": "getUavStatus",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_10253",
+      "candidate_name": "sendUavCommand",
+      "class": "wrong_arguments",
+      "sub": "wrong_type",
+      "details": [
+        "wrong_type:uav_id"
+      ]
+    },
+    {
+      "id": "toolace_10253",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    },
+    {
+      "id": "toolace_10521",
+      "candidate_name": "Get Address Monitor Quota Usage",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_10521",
+      "candidate_name": "Retrieve All Queue Times",
+      "class": "wrong_function",
+      "sub": null,
+      "details": [
+        "function_name_mismatch"
+      ]
+    },
+    {
+      "id": "toolace_10521",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    },
+    {
+      "id": "toolace_1134",
+      "candidate_name": "GetIpInfoLite",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_1134",
+      "candidate_name": "State API",
+      "class": "wrong_function",
+      "sub": null,
+      "details": [
+        "function_name_mismatch"
+      ]
+    },
+    {
+      "id": "toolace_1134",
+      "candidate_name": "GetIpInfoLite",
+      "class": "wrong_arguments",
+      "sub": "wrong_key",
+      "details": [
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_1134",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    },
+    {
+      "id": "toolace_6503",
+      "candidate_name": "Geo Search API",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_6503",
+      "candidate_name": "Region List",
+      "class": "wrong_function",
+      "sub": null,
+      "details": [
+        "function_name_mismatch"
+      ]
+    },
+    {
+      "id": "toolace_6503",
+      "candidate_name": "Geo Search API",
+      "class": "wrong_arguments",
+      "sub": "wrong_key",
+      "details": [
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_6503",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    },
+    {
+      "id": "toolace_5206",
+      "candidate_name": "Address Validation API",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_5206",
+      "candidate_name": "get_screener_filters",
+      "class": "wrong_function",
+      "sub": null,
+      "details": [
+        "function_name_mismatch"
+      ]
+    },
+    {
+      "id": "toolace_5206",
+      "candidate_name": "Address Validation API",
+      "class": "wrong_arguments",
+      "sub": "wrong_key",
+      "details": [
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_5206",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    },
+    {
+      "id": "toolace_7480",
+      "candidate_name": "Get Cricket Match Results By Date",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_7480",
+      "candidate_name": "Get Prematch List",
+      "class": "wrong_arguments",
+      "sub": "wrong_type",
+      "details": [
+        "wrong_type:lid,sp"
+      ]
+    },
+    {
+      "id": "toolace_7480",
+      "candidate_name": "Get Cricket Match Results By Date",
+      "class": "wrong_arguments",
+      "sub": "wrong_key",
+      "details": [
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_7480",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    },
+    {
+      "id": "toolace_10046",
+      "candidate_name": "Get Latest EuroMillions Results",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_10046",
+      "candidate_name": "Elhighlights API",
+      "class": "wrong_function",
+      "sub": null,
+      "details": [
+        "function_name_mismatch"
+      ]
+    },
+    {
+      "id": "toolace_10046",
+      "candidate_name": "Get Latest EuroMillions Results",
+      "class": "wrong_arguments",
+      "sub": "wrong_key",
+      "details": [
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_10046",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    },
+    {
+      "id": "toolace_4385",
+      "candidate_name": "Get Plant Information",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_4385",
+      "candidate_name": "Crimes at Location",
+      "class": "wrong_function",
+      "sub": null,
+      "details": [
+        "function_name_mismatch"
+      ]
+    },
+    {
+      "id": "toolace_4385",
+      "candidate_name": "Get Plant Information",
+      "class": "wrong_arguments",
+      "sub": "wrong_key",
+      "details": [
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_4385",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    },
+    {
+      "id": "toolace_9261",
+      "candidate_name": "NFT Collection Information",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_9261",
+      "candidate_name": "IP Address to Income",
+      "class": "wrong_function",
+      "sub": null,
+      "details": [
+        "function_name_mismatch"
+      ]
+    },
+    {
+      "id": "toolace_9261",
+      "candidate_name": "NFT Collection Information",
+      "class": "wrong_arguments",
+      "sub": "wrong_key",
+      "details": [
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_9261",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    },
+    {
+      "id": "toolace_6062",
+      "candidate_name": "getFertilizerRecommendation",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_6062",
+      "candidate_name": "irrigateCrop",
+      "class": "wrong_function",
+      "sub": null,
+      "details": [
+        "function_name_mismatch"
+      ]
+    },
+    {
+      "id": "toolace_6062",
+      "candidate_name": "getFertilizerRecommendation",
+      "class": "wrong_arguments",
+      "sub": "wrong_key",
+      "details": [
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_6062",
+      "candidate_name": "",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "missing_or_invalid_name"
+      ]
+    }
+  ]
+}

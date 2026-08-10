@@ -1,0 +1,81 @@
+# Fast Pilot v4 — shared defaults
+project:
+  name: fc_class_kd_fast_pilot
+  seed: 42
+
+data:
+  sources:
+    - xlam
+    - toolace
+  targets:
+    train: [1500, 3000]
+    val: 300
+    internal_test: 500
+    diagnostic: [200, 300]
+    equivalence_diagnostic: 200
+  filters:
+    single_turn: true
+    single_call: true
+    require_tool_schema: true
+    min_tools: 2
+    gold_parseable: true
+
+candidates:
+  K: 6
+  composition:
+    gold: 1
+    strict_equivalent: 1
+    student_hard_error: 1
+    wrong_function: 1
+    wrong_argument: 1
+    wrong_value_invalid: 1
+
+scoring:
+  alpha: 1.0
+  temperature: 1.0
+
+training:
+  micro_batch_size: 1
+  gradient_checkpointing: true
+  max_length: 1024
+  lambda_cand: 1.0
+  lambda_class: 1.0
+
+models:
+  student: Qwen/Qwen3-1.7B
+  teacher: Qwen/Qwen3-8B
+  debug_student: Qwen/Qwen3-0.6B
+  qlora:
+    r: 16
+    lora_alpha: 32
+    lora_dropout: 0.05
+    target_modules: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+    bits: 4
+    bnb_4bit_quant_type: nf4
+
+verifier:
+  classes:
+    - correct
+    - wrong_function
+    - wrong_arguments
+    - invalid
+    - unknown
+  audit:
+    sample_size: 200
+    correct_precision_min: 0.98
+    overall_accuracy_min: 0.95
+
+diagnostic:
+  teacher_class_top1_min: 0.80
+  teacher_student_gap_min: 0.05
+  teacher_student_gap_ideal: 0.08
+  valid_error_candidate_ratio_min: 0.90
+  multi_valid_ratio_min: 0.10
+
+paths:
+  raw: data/raw
+  processed: data/processed
+  splits: data/splits
+  diagnostics: data/diagnostics
+  outputs: outputs
+  reports: reports

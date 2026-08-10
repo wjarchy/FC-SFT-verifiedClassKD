@@ -1,0 +1,20 @@
+# RTX 4090 24GB — rented GPU for formal Fast Pilot
+defaults:
+  - base
+
+hardware:
+  name: rtx4090
+  fp16: false
+  bf16: true
+  micro_batch_size: 1
+  gradient_checkpointing: true
+  max_length: 1536
+
+candidates:
+  K: 6
+
+models:
+  teacher_inference:
+    load_in_4bit: false
+    bf16: true
+    device_map: auto
