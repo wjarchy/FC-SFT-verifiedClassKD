@@ -13,7 +13,10 @@ python scripts/doctor.py
 pytest -q
 ```
 
-## Download & build splits
+## 数据与阶段对照
+
+每个 Step 读哪些文件、写哪些目录，见 **`docs/DATA_MAP.md`**。  
+`data/splits/`、`data/processed/` 等子目录里也有简短 `README.md` 标注。
 
 Requires HuggingFace access for `Salesforce/xlam-function-calling-60k` (gated — accept terms + `huggingface-cli login`).
 
@@ -51,5 +54,7 @@ See `FC_ClassKD_Fast_Pilot_PRD_v4.md` §10.
 
 ## Sync via git
 
-Large data under `data/raw/`, `data/processed/`, `outputs/` are gitignored.  
-Commit `data/splits/*.jsonl` only if size allows, or share `all_records.jsonl` via internal storage.
+See **`docs/WORKFLOW_COMPANY_PERSONAL.md`** for 公司 PC ↔ 个人 PC ↔ 实验室 协同流程（bundle、云盘、数据复现）。
+
+Large data under `data/raw/`, `data/processed/`, `outputs/` are gitignored by default.
+Copy `data/splits/` + `data/processed/all_records.jsonl` via cloud/USB for exact reproducibility.

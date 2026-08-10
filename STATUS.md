@@ -18,9 +18,20 @@
 
 Splits in `data/splits/` (auto-scaled to available data).
 
-## Next (GPU @ 2080 Ti)
+## Next (PRD §13)
 
-- [ ] `huggingface-cli login` + re-run with `--sources xlam toolace` for full scale
-- [ ] Smoke test (0.6B)
-- [ ] Pre-diagnostic 200–300
-- [ ] S0 SFT → three branches → evaluation
+### Step 2 — 2080 Ti（需 GPU）
+
+```bash
+python scripts/smoke_test.py --config rtx2080ti
+python scripts/tiny_overfit.py --config rtx2080ti   # 待实现
+```
+
+### Step 3 — Pre-Diagnostic（待实现 `run_diagnostic.py`）
+
+### 无 GPU 可先做
+
+```bash
+python scripts/build_equivalence.py
+pytest -q
+```
