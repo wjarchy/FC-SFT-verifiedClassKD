@@ -312,7 +312,7 @@ Git 远程已设为：`git@github.com:wjarchy/FC-SFT-verifiedClassKD.git`
 - [x] 旧报告记录 200 条 Gold self-check 100%；这只是自动 sanity check
 - [ ] 人工标注的 Verifier precision / overall accuracy Gate
 - [ ] xLAM 入池（待 HF 数据集权限稳定后 `--sources xlam toolace`）
-- [ ] GitHub 远程有代码（待个人 PC push 成功）
+- [x] GitHub `main` 已建立，可通过 SSH push/pull
 - [ ] 2080 Ti smoke test 及后续 GPU 流程
 
 准确的研究进度与证据边界以根目录 `STATUS.md` 为准。
