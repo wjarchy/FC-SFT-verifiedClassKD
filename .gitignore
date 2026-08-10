@@ -30,13 +30,21 @@ data/splits/**
 !data/splits/.gitkeep
 data/diagnostics/**
 !data/diagnostics/.gitkeep
+data/candidates/**
+!data/candidates/.gitkeep
+!data/candidates/README.md
+data/cache/**
+!data/cache/.gitkeep
+!data/cache/README.md
 
 # Model outputs
 outputs/**
 !outputs/.gitkeep
-reports/*.md
-!reports/.gitkeep
-!reports/*_template.md
+
+# Keep compact reports in git; exclude bulky per-example prediction dumps
+reports/predictions/**
+reports/**/*.jsonl
+reports/**/*.parquet
 
 # HF / torch cache
 .cache/

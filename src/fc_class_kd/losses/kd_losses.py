@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List
-
 import torch
-import torch.nn.functional as F
 
 from fc_class_kd.scoring.aggregation import torch_kl_div
 

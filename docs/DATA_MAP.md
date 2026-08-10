@@ -2,6 +2,9 @@
 
 > 路径均相对于 `fc_class_kd/` 根目录。  
 > **机器分工不固定**：任何有 GPU 的机器可跑训练/冒烟；无 GPU 可跑数据处理与 `pytest`。
+>
+> **当前 checkout 提示（2026-08-10）**：Git 中只有 `data/fixtures/smoke_4.jsonl`；下文列出的
+> ToolACE processed/splits 条数来自旧机器记录，原 JSONL 尚未同步到本机，不能视为当前已复现。
 
 ---
 
@@ -28,7 +31,7 @@ data/splits/*.jsonl                       ← 固定划分（实验真相源）
 
 | Step | 阶段 | **读取（输入）** | **写出（输出）** | 当前状态 |
 |------|------|------------------|------------------|----------|
-| **1** | 环境 + 数据 + Verifier | HF 数据集（缓存不在本目录） | 见下方「目录说明」 | ✅ 已有 splits |
+| **1** | 环境 + 数据 + Verifier | HF 数据集（缓存不在本目录） | 见下方「目录说明」 | ⚠️ 代码已有；当前 checkout 无全量 splits；人工 Verifier Gate 未做 |
 | **2** | 0.6B Smoke | `data/splits/train.jsonl` **或** `data/fixtures/smoke_4.jsonl`（无全量数据时自动 fallback） | 无数据文件；终端 `SMOKE_OK` | 待有 GPU 的机器跑 |
 | **3** | Pre-Diagnostic | `data/splits/diagnostic.jsonl`（约 206 条） | `reports/diagnostic.md`（待建脚本） | 未跑 |
 | **4** | 训练 S0（Vanilla SFT） | `data/splits/train.jsonl` | `outputs/s0/` LoRA（待建） | 未跑 |
@@ -38,8 +41,8 @@ data/splits/*.jsonl                       ← 固定划分（实验真相源）
 | **7** | 三条分支训练 | `train.jsonl` + `candidates` + `cache` | `outputs/sft_cont/` 等（**待建**） | 未做 |
 | | 训练中验证 | `data/splits/val.jsonl` | | |
 | **8a** | Internal Test | `data/splits/internal_test.jsonl` | `reports/fast_pilot_results.md` | 未跑 |
-| **8b** | Equivalence | `data/splits/equivalence_diagnostic.jsonl` | Robustness Drop 指标 | 未跑 |
-| | 可选扩展变体 | `data/diagnostics/equivalence_variants.jsonl` | | ✅ 已生成 |
+| **8b** | Equivalence | `data/splits/equivalence_diagnostic.jsonl` | Robustness Drop 指标 | 未实现完整 paired evaluation |
+| | 变体 helper | `data/diagnostics/equivalence_variants.jsonl` | | 代码已有；当前文件不存在，且协议需先修订 |
 | **8c** | BFCL | **外部** BFCL 数据（不进 train） | BFCL 分数 | 未接 |
 
 ---
@@ -56,11 +59,11 @@ data/splits/*.jsonl                       ← 固定划分（实验真相源）
 
 | 文件 | 说明 | 阶段 |
 |------|------|------|
-| **`all_records.jsonl`** | 通过 Fast Pilot 筛选的全量记录（当前约 2688 条，ToolACE-only） | Step 1 产出；`build_data.py --skip-download` 时作为切分输入 |
+| **`all_records.jsonl`** | 通过 Fast Pilot 筛选的全量记录（旧机器记录约 2688 条，ToolACE-only；当前 checkout 不含） | Step 1 产出；`build_data.py --skip-download` 时作为切分输入 |
 
 ### `data/splits/` — **最重要：固定实验划分**
 
-| 文件 | 条数（当前） | 用途 |
+| 文件 | 条数（旧机器记录） | 用途 |
 |------|-------------|------|
 | **`train.jsonl`** | 1654 | Step 2 冒烟样本；Step 4 S0 **训练**；Step 5 **候选池**（仅 train）；Step 7 KD **训练** |
 | **`val.jsonl`** | 248 | Step 4/7 **训练中验证**、调 early stopping（不做最终论文结论） |
@@ -69,12 +72,13 @@ data/splits/*.jsonl                       ← 固定划分（实验真相源）
 | **`equivalence_diagnostic.jsonl`** | 165 | Step 8 **等价鲁棒性**评测（原始条） |
 
 **注意：** BFCL 测试集 **不得** 出现在以上任何文件中（PRD 要求）。
+这些条数不是当前 checkout 的本地文件清单；恢复后应另存来源 revision、构建命令和文件 hash。
 
 ### `data/diagnostics/` — 诊断衍生数据（非主划分）
 
 | 文件 | 说明 | 阶段 |
 |------|------|------|
-| **`equivalence_variants.jsonl`** | 由 `scripts/build_equivalence.py` 从 equiv split 展开的变体 | Step 8b 可选补充 |
+| **`equivalence_variants.jsonl`** | 由 `scripts/build_equivalence.py` 从 equiv split 展开的 gold-call 变体；当前 checkout 未生成，且不能单独构成鲁棒性评测 | Step 8b 辅助输入 |
 | （待建）`pre_diagnostic_scores.jsonl` | 预诊断逐条打分 | Step 3 |
 
 ### `data/candidates/` — **待建** Step 5
@@ -130,7 +134,7 @@ data/splits/*.jsonl                       ← 固定划分（实验真相源）
 | 否 | `build_data.py`, `audit_verifier.py`, `build_equivalence.py`, `pytest` | 公司 PC ✅ |
 | **是** | `smoke_test.py`, `train_sft.py`, `cache_teacher_scores.py` | **任意有 NVIDIA GPU + CUDA 的机器** |
 
-公司 PC 当前检测结果：`cuda: False` → **本机现在跑不了 0.6B 冒烟**；换有卡的机器即可，不必固定 2080 Ti。
+当前机器没有可用 CUDA → **本机现在跑不了 0.6B 冒烟**；换有卡的机器即可，不必固定 2080 Ti。
 
 协同见：`docs/WORKFLOW_COMPANY_PERSONAL.md`
 

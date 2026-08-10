@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Verifier audit on gold + rule candidates (PRD §4.4)."""
+"""Automated Verifier sanity check on gold calls and rule candidates.
+
+This script does not replace the human-labelled PRD §4.4 audit gate.
+"""
 
 from __future__ import annotations
 
@@ -61,29 +64,38 @@ def main() -> None:
                 }
             )
 
-    gold_precision = gold_correct / gold_total if gold_total else 0.0
+    gold_self_check_rate = gold_correct / gold_total if gold_total else 0.0
 
     table = Table(title="Verifier Audit")
     table.add_column("Metric")
     table.add_column("Value")
     table.add_row("Gold samples", str(gold_total))
-    table.add_row("Gold correct/equiv precision", f"{gold_precision:.4f}")
+    table.add_row("Gold self-check rate", f"{gold_self_check_rate:.4f}")
     for label, count in sorted(class_counts.items()):
         table.add_row(f"Candidate class: {label}", str(count))
     console.print(table)
 
-    passed = gold_precision >= cfg.verifier.audit.correct_precision_min
-    console.print(f"Gate passed: {passed}")
+    automated_sanity_passed = (
+        gold_self_check_rate >= cfg.verifier.audit.correct_precision_min
+    )
+    console.print(f"Automated sanity passed: {automated_sanity_passed}")
+    console.print("PRD human-labelled audit gate: NOT EVALUATED")
 
     out_path = args.out or str(Path(cfg.paths.reports) / "verifier_audit.json")
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(
             {
-                "gold_precision": gold_precision,
+                "audit_kind": "automated_sanity_only",
+                "limitations": (
+                    "Candidate labels were produced by the verifier itself; "
+                    "human-labelled precision and overall accuracy were not measured."
+                ),
+                "gold_self_check_rate": gold_self_check_rate,
                 "gold_total": gold_total,
                 "class_counts": dict(class_counts),
-                "gate_passed": passed,
+                "automated_sanity_passed": automated_sanity_passed,
+                "prd_manual_gate_passed": None,
                 "samples": candidate_audit[:50],
             },
             f,

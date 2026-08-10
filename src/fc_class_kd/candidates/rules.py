@@ -6,7 +6,7 @@ import copy
 import random
 from typing import List, Optional
 
-from fc_class_kd.types import FCRecord, FunctionCall, ToolSchema
+from fc_class_kd.types import FCRecord, FunctionCall
 
 
 def _key_reorder_call(call: FunctionCall) -> Optional[FunctionCall]:

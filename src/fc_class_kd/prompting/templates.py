@@ -62,7 +62,6 @@ def build_user_message(record: FCRecord) -> str:
 
 def build_training_messages(record: FCRecord, gold_call: FunctionCall) -> List[Dict[str, Any]]:
     """Messages for SFT: user query + assistant tool call (OpenAI-style)."""
-    call_json = serialize_function_call(gold_call)
     return [
         {"role": "user", "content": build_user_message(record)},
         {

@@ -153,10 +153,12 @@ python scripts/build_data.py --skip-download --seed 42 \
 git clone /path/to/fc_class_kd.bundle -b main fc_class_kd
 cd fc_class_kd
 
-# 2. 添加远程（bundle 内通常没有 origin）
-git remote add origin git@github.com:wjarchy/FC-SFT-verifiedClassKD.git
+# 2. 配置远程。若 bundle clone 已把 bundle 路径设为 origin，用 set-url
+git remote set-url origin git@github.com:wjarchy/FC-SFT-verifiedClassKD.git
+# 若完全没有 origin，则改用：
+# git remote add origin git@github.com:wjarchy/FC-SFT-verifiedClassKD.git
 # 或 HTTPS + PAT：
-# git remote add origin https://github.com/wjarchy/FC-SFT-verifiedClassKD.git
+# git remote set-url origin https://github.com/wjarchy/FC-SFT-verifiedClassKD.git
 
 # 3. 推送
 git push -u origin main
@@ -305,9 +307,12 @@ Git 远程已设为：`git@github.com:wjarchy/FC-SFT-verifiedClassKD.git`
 
 ## 11. 当前进度快照（2026-08-10）
 
-- [x] 工程骨架、Verifier、单元测试（17 passed）
-- [x] ToolACE 数据已处理（约 2688 条，仅 toolace）
-- [x] Verifier 审计 Gate 通过（gold precision 100% / 200 样本）
+- [x] 工程骨架、Verifier、数学 helper、单元测试（本机复核 18 passed）
+- [x] 旧机器曾处理 ToolACE（约 2688 条，仅 toolace）；当前 checkout 未带 processed/splits
+- [x] 旧报告记录 200 条 Gold self-check 100%；这只是自动 sanity check
+- [ ] 人工标注的 Verifier precision / overall accuracy Gate
 - [ ] xLAM 入池（待 HF 数据集权限稳定后 `--sources xlam toolace`）
 - [ ] GitHub 远程有代码（待个人 PC push 成功）
 - [ ] 2080 Ti smoke test 及后续 GPU 流程
+
+准确的研究进度与证据边界以根目录 `STATUS.md` 为准。

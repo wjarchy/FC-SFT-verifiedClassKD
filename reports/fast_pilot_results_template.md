@@ -8,8 +8,10 @@
 
 ## Verifier audit
 
-- Gold precision:
-- Gate passed:
+- Gold self-check rate:
+- Human-labelled correct/equivalent precision:
+- Human-labelled overall accuracy:
+- PRD Gate passed:
 
 ## Fast Pilot results
 

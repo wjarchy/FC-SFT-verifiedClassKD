@@ -90,13 +90,13 @@ def main() -> None:
             console.print(f"  ToolACE passed filter: {len(toolace)}")
 
         all_records = xlam + toolace
-        seen_q: set[int] = set()
+        seen_queries: set[str] = set()
         deduped = []
         for r in all_records:
-            h = hash(r.query.strip())
-            if h in seen_q:
+            normalized_query = r.query.strip()
+            if normalized_query in seen_queries:
                 continue
-            seen_q.add(h)
+            seen_queries.add(normalized_query)
             deduped.append(r)
         all_records = deduped
 

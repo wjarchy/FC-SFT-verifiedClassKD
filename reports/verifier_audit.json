@@ -1,5 +1,7 @@
 {
-  "gold_precision": 1.0,
+  "audit_kind": "automated_sanity_only",
+  "limitations": "Candidate labels were produced by the verifier itself; human-labelled precision and overall accuracy were not measured.",
+  "gold_self_check_rate": 1.0,
   "gold_total": 200,
   "class_counts": {
     "correct": 200,
@@ -7,7 +9,8 @@
     "invalid": 200,
     "wrong_function": 145
   },
-  "gate_passed": true,
+  "automated_sanity_passed": true,
+  "prd_manual_gate_passed": null,
   "samples": [
     {
       "id": "toolace_1914",

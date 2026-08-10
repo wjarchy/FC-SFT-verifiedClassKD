@@ -57,7 +57,7 @@ def main() -> int:
     hf_home = os.environ.get("HF_HOME", os.path.expanduser("~/.cache/huggingface"))
     print(f"HF cache: {hf_home}")
 
-    total, used, free = shutil.disk_usage(Path.cwd())
+    _, _, free = shutil.disk_usage(Path.cwd())
     print(f"Disk free: {free / 1e9:.1f} GB")
 
     try:

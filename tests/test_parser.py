@@ -1,7 +1,5 @@
 """Tests for verifier parser."""
 
-import pytest
-
 from fc_class_kd.verifier.parser import parse_function_call, serialize_function_call
 from fc_class_kd.types import FunctionCall
 

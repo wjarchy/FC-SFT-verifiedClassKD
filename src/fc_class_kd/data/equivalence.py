@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from fc_class_kd.types import FCRecord, FunctionCall
-from fc_class_kd.verifier.normalizer import apply_schema_defaults, canonicalize_call
+from fc_class_kd.verifier.normalizer import canonicalize_call
 from fc_class_kd.verifier.parser import serialize_function_call
 
 

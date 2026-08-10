@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PRD §11 smoke test: 4 samples, verifier, 0.6B forward/backward, Class KD toy loss."""
+"""GPU smoke test: fixtures, 0.6B SFT backward, and standalone Class-KD math."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from fc_class_kd.data.splits import read_split
 from fc_class_kd.losses.kd_losses import class_kd_loss
 from fc_class_kd.prompting.templates import encode_sft_pair
 from fc_class_kd.training.model_utils import attach_lora, load_student_model, max_memory_mb
-from fc_class_kd.types import FCRecord, PRIMARY_CLASSES
+from fc_class_kd.types import FCRecord
 from fc_class_kd.verifier.classifier import classify_function_call
 
 FIXTURE_PATH = Path(__file__).resolve().parents[1] / "data" / "fixtures" / "smoke_4.jsonl"
@@ -106,18 +106,34 @@ def main() -> int:
     loss_sft = out.loss
     print(f"SFT loss: {loss_sft.item():.4f}")
 
+    if not torch.isfinite(loss_sft):
+        print("SMOKE_FAIL: SFT loss is NaN/Inf")
+        return 1
+    loss_sft.backward()
+
+    has_lora_grad = any(
+        p.grad is not None and p.grad.abs().sum() > 0
+        for p in model.parameters()
+        if p.requires_grad
+    )
+    frozen_has_grad = any(p.grad is not None for p in model.parameters() if not p.requires_grad)
+    if not has_lora_grad:
+        print("SMOKE_FAIL: no LoRA gradients after SFT backward")
+        return 1
+    if frozen_has_grad:
+        print("SMOKE_FAIL: frozen base parameters received gradients")
+        return 1
+
     t_probs = torch.tensor([[0.5, 0.25, 0.15, 0.1]], device=model.device)
-    s_log = torch.log(t_probs * 0.9 + 0.025)
+    student_class_logits = torch.zeros_like(t_probs, requires_grad=True)
+    s_log = torch.log_softmax(student_class_logits, dim=-1)
     loss_kd = class_kd_loss(s_log, t_probs, temperature=1.0)
     loss_kd.backward()
-    print(f"Class KD toy loss: {loss_kd.item():.4f}")
-
-    has_grad = any(
-        p.grad is not None and p.grad.abs().sum() > 0 for p in model.parameters() if p.requires_grad
-    )
-    if not has_grad:
-        print("SMOKE_FAIL: no LoRA gradients")
+    if not torch.isfinite(loss_kd) or student_class_logits.grad is None:
+        print("SMOKE_FAIL: standalone Class KD gradient check failed")
         return 1
+    print(f"Standalone Class KD toy loss: {loss_kd.item():.4f}")
+    print("Note: end-to-end Class KD → LoRA gradient test remains a Step 7 integration test")
 
     with tempfile.TemporaryDirectory() as tmp:
         adapter_dir = Path(tmp) / "adapter"

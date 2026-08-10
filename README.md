@@ -1,60 +1,57 @@
 # FC Class KD — Fast Pilot
 
-Verifier-defined Class-Level Distillation for Function Calling (PRD v4).
+Verifier-defined Class-Level Distillation for single-turn, single-call Function Calling.
 
-## Quick start (no GPU)
+当前实验唯一执行基线是 [`FC_ClassKD_Fast_Pilot_PRD_v4.md`](FC_ClassKD_Fast_Pilot_PRD_v4.md)。
+[`FC_Equivalence_Distillation_Pilot_PRD_v3.md`](FC_Equivalence_Distillation_Pilot_PRD_v3.md)
+只保留为完整研究设计背景，不用于扩大首轮 Fast Pilot 范围。
 
-```bash
-cd fc_class_kd
+> 当前阶段：no-GPU 工程骨架已建立，正式实验尚未开始。准确进度、证据边界和下一步见
+> [`STATUS.md`](STATUS.md)。
+
+## 当前仓库包含什么
+
+- Verifier：解析、Schema 检查、保守规范化、四主类分类。
+- 数据入口：xLAM / ToolACE adapter、筛选、固定 seed 划分。
+- 数学组件：候选序列分数、类别聚合、Candidate/Class KL、KL 分解。
+- 调试骨架：Qwen3 prompt、QLoRA 模型加载、4 条合成 smoke fixture。
+- 18 个 CPU 单元测试；2026-08-10 本机复核为 `18 passed`。
+
+当前 checkout **不包含** 全量 `data/processed/`、`data/splits/`、模型权重或训练输出。
+历史机器曾报告 ToolACE-only 2688 条处理结果，但必须同步原文件或重跑后才能在本机复现。
+
+## 快速开始
+
+```powershell
 python -m venv .venv
-# Windows: .venv\Scripts\activate
-pip install -e .
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev]"
 python scripts/doctor.py
-pytest -q
+python -m pytest -q
 ```
 
-## 数据与阶段对照
+数据构建：
 
-每个 Step 读哪些文件、写哪些目录，见 **`docs/DATA_MAP.md`**。  
-`data/splits/`、`data/processed/` 等子目录里也有简短 `README.md` 标注。
+```powershell
+# 无需 xLAM gate 的最小路径
+python scripts/build_data.py --sources toolace --seed 42
 
-Requires HuggingFace access for `Salesforce/xlam-function-calling-60k` (gated — accept terms + `huggingface-cli login`).
-
-**ToolACE-only fallback** (no gate): `tryumanshow/ToolACE-Qwen-cleaned` (~2700 filtered single-call samples).
-
-```bash
-# ToolACE only (works without HF login)
-python scripts/build_data.py --sources toolace
-
-# Both sources after HF login
-python scripts/build_data.py --sources xlam toolace
+# 获得 xLAM 权限并登录 Hugging Face 后
+python scripts/build_data.py --sources xlam toolace --seed 42
 ```
 
-Processed cache: `data/processed/all_records.jsonl`  
-Splits: `data/splits/*.jsonl`
+数据流、各阶段输入输出见 [`docs/DATA_MAP.md`](docs/DATA_MAP.md)。公司 PC、个人 PC、
+实验室机器之间的同步方式见
+[`docs/WORKFLOW_COMPANY_PERSONAL.md`](docs/WORKFLOW_COMPANY_PERSONAL.md)。
 
-## Verifier audit
+## Fast Pilot 执行顺序
 
-```bash
-python scripts/audit_verifier.py --split train --sample-size 200
-```
+1. 恢复/重建固定数据划分，完成人工标注的 Verifier Gate。
+2. 在 GPU 上跑 `smoke_test.py`，再实现并通过 Tiny Overfit。
+3. 完成 200–300 条 Pre-Diagnostic，通过后才进入正式训练。
+4. 训练公共 S0，冻结 K=6 Candidate Pool，缓存 8B Teacher 分数。
+5. 从同一 S0 跑 SFT Continuation、Candidate KD、Class KD。
+6. 统一完成 Internal、Equivalence、BFCL 评测并给出 Go/Weak-Go/No-Go。
 
-## Project layout
-
-See `FC_ClassKD_Fast_Pilot_PRD_v4.md` §10.
-
-## GPU steps (2080 Ti / 4090)
-
-1. `scripts/smoke_test.py` — 0.6B forward/backward
-2. `scripts/run_diagnostic.py` — 200–300 pre-diagnostic
-3. `scripts/train_sft.py` → S0
-4. `scripts/cache_teacher_scores.py`
-5. `scripts/train_candidate_kd.py` / `train_class_kd.py`
-6. `scripts/evaluate_*.py`
-
-## Sync via git
-
-See **`docs/WORKFLOW_COMPANY_PERSONAL.md`** for 公司 PC ↔ 个人 PC ↔ 实验室 协同流程（bundle、云盘、数据复现）。
-
-Large data under `data/raw/`, `data/processed/`, `outputs/` are gitignored by default.
-Copy `data/splits/` + `data/processed/all_records.jsonl` via cloud/USB for exact reproducibility.
+候选池、Teacher cache、模型输出和逐样本预测默认不进入 Git；紧凑配置、代码和 Markdown/JSON
+汇总报告进入 Git。不要提交 `.env`、Token、SSH 私钥、模型权重或敏感原始数据。

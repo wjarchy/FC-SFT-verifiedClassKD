@@ -2,7 +2,6 @@
 
 import math
 
-import pytest
 import torch
 
 from fc_class_kd.losses.kd_losses import candidate_kd_loss, class_kd_loss
@@ -57,8 +56,6 @@ def test_kl_decomposition():
 
 
 def test_torch_kd_losses_finite():
-    k = 4
-    c = 4
     t_probs = torch.tensor([[0.25, 0.25, 0.25, 0.25]], dtype=torch.float32)
     s_log = torch.log(t_probs + 1e-8)
     loss_c = candidate_kd_loss(s_log, t_probs, temperature=1.0)
