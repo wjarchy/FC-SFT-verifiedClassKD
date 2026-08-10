@@ -29,7 +29,7 @@ data/splits/*.jsonl                       ← 固定划分（实验真相源）
 | Step | 阶段 | **读取（输入）** | **写出（输出）** | 当前状态 |
 |------|------|------------------|------------------|----------|
 | **1** | 环境 + 数据 + Verifier | HF 数据集（缓存不在本目录） | 见下方「目录说明」 | ✅ 已有 splits |
-| **2** | 0.6B Smoke | `data/splits/train.jsonl`（默认前 4 条） | 无数据文件；终端 `SMOKE_OK` | 待有 GPU 的机器跑 |
+| **2** | 0.6B Smoke | `data/splits/train.jsonl` **或** `data/fixtures/smoke_4.jsonl`（无全量数据时自动 fallback） | 无数据文件；终端 `SMOKE_OK` | 待有 GPU 的机器跑 |
 | **3** | Pre-Diagnostic | `data/splits/diagnostic.jsonl`（约 206 条） | `reports/diagnostic.md`（待建脚本） | 未跑 |
 | **4** | 训练 S0（Vanilla SFT） | `data/splits/train.jsonl` | `outputs/s0/` LoRA（待建） | 未跑 |
 | | 验证 | `data/splits/val.jsonl` | val metrics | |
