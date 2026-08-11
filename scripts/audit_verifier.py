@@ -19,7 +19,7 @@ from fc_class_kd.candidates.rules import build_rule_candidates
 from fc_class_kd.config import load_config
 from fc_class_kd.data.splits import read_split
 from fc_class_kd.types import VerifierClass
-from fc_class_kd.verifier.classifier import classify_function_call
+from fc_class_kd.verifier.classifier import classify_call, classify_function_call
 
 console = Console()
 
@@ -52,12 +52,13 @@ def main() -> None:
             gold_correct += 1
 
         for cand in build_rule_candidates(rec, seed=args.seed):
-            res = classify_function_call(cand, rec.tools, rec.gold_call)
+            res = classify_call(cand.serialized_call, rec.tools, rec.gold_call)
             class_counts[res.class_label.value] += 1
             candidate_audit.append(
                 {
                     "id": rec.id,
-                    "candidate_name": cand.name,
+                    "candidate_source": cand.source,
+                    "serialized_call": cand.serialized_call,
                     "class": res.class_label.value,
                     "sub": res.sub_label,
                     "details": res.details,

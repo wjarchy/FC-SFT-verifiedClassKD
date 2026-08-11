@@ -38,6 +38,11 @@ def evaluate_predictions(
     records: List[FCRecord],
     predictions: List[str],
 ) -> EvalMetrics:
+    if len(records) != len(predictions):
+        raise ValueError(
+            "Prediction count mismatch: "
+            f"received {len(predictions)} predictions for {len(records)} records"
+        )
     metrics = EvalMetrics()
     for rec, pred in zip(records, predictions):
         metrics.total += 1

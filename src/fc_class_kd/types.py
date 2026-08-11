@@ -45,6 +45,20 @@ class FunctionCall(BaseModel):
     arguments: Dict[str, Any] = Field(default_factory=dict)
 
 
+class CandidateRecord(BaseModel):
+    """A candidate's surface form and parsed AST must remain separate.
+
+    Candidate KD scores ``serialized_call``.  The verifier classifies ``parsed_call`` (or
+    reparses the serialized form).  Keeping both prevents strict surface-equivalent calls
+    from collapsing into one Python dictionary.
+    """
+
+    sample_id: str
+    source: str
+    serialized_call: str
+    parsed_call: Optional[FunctionCall] = None
+
+
 class FCRecord(BaseModel):
     """Unified internal record after adapter + filter."""
 

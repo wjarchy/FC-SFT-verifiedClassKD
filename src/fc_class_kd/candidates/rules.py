@@ -6,7 +6,8 @@ import copy
 import random
 from typing import List, Optional
 
-from fc_class_kd.types import FCRecord, FunctionCall
+from fc_class_kd.types import CandidateRecord, FCRecord, FunctionCall
+from fc_class_kd.verifier.parser import serialize_function_call
 
 
 def _key_reorder_call(call: FunctionCall) -> Optional[FunctionCall]:
@@ -91,52 +92,99 @@ def _wrong_type_call(record: FCRecord) -> Optional[FunctionCall]:
     return None
 
 
-def _invalid_json_call(record: FCRecord) -> FunctionCall:
-    return FunctionCall(name="", arguments={"broken": None})
-
-
 def build_rule_candidates(
     record: FCRecord,
     seed: int = 42,
     include_invalid: bool = True,
-) -> List[FunctionCall]:
+) -> List[CandidateRecord]:
     """
     Build partial K=6 pool without student on-policy candidates.
     Returns unique candidates; student_hard_error slot left empty (filled later).
     """
     rng = random.Random(seed)
-    candidates: List[FunctionCall] = [record.gold_call]
+    candidates: List[CandidateRecord] = [
+        CandidateRecord(
+            sample_id=record.id,
+            source="gold",
+            serialized_call=serialize_function_call(record.gold_call, sort_keys=False),
+            parsed_call=record.gold_call,
+        )
+    ]
 
     strict = _key_reorder_call(record.gold_call)
-    if strict and strict.arguments != record.gold_call.arguments:
-        candidates.append(strict)
+    if strict:
+        strict_surface = serialize_function_call(strict, sort_keys=False)
+        if strict_surface != candidates[0].serialized_call:
+            candidates.append(
+                CandidateRecord(
+                    sample_id=record.id,
+                    source="strict_equivalent_key_reorder",
+                    serialized_call=strict_surface,
+                    parsed_call=strict,
+                )
+            )
 
     wrong_fn = _wrong_function_call(record, rng)
     if wrong_fn:
-        candidates.append(wrong_fn)
+        candidates.append(
+            CandidateRecord(
+                sample_id=record.id,
+                source="wrong_function",
+                serialized_call=serialize_function_call(wrong_fn, sort_keys=False),
+                parsed_call=wrong_fn,
+            )
+        )
 
     missing = _missing_required_call(record)
     if missing:
-        candidates.append(missing)
+        candidates.append(
+            CandidateRecord(
+                sample_id=record.id,
+                source="missing_required",
+                serialized_call=serialize_function_call(missing, sort_keys=False),
+                parsed_call=missing,
+            )
+        )
 
     wrong_key = _wrong_key_call(record)
     if wrong_key:
-        candidates.append(wrong_key)
+        candidates.append(
+            CandidateRecord(
+                sample_id=record.id,
+                source="wrong_key",
+                serialized_call=serialize_function_call(wrong_key, sort_keys=False),
+                parsed_call=wrong_key,
+            )
+        )
 
     wrong_type = _wrong_type_call(record)
     if wrong_type:
-        candidates.append(wrong_type)
+        candidates.append(
+            CandidateRecord(
+                sample_id=record.id,
+                source="wrong_type",
+                serialized_call=serialize_function_call(wrong_type, sort_keys=False),
+                parsed_call=wrong_type,
+            )
+        )
 
     if include_invalid:
-        candidates.append(_invalid_json_call(record))
+        candidates.append(
+            CandidateRecord(
+                sample_id=record.id,
+                source="invalid_json",
+                serialized_call='{"name":',
+                parsed_call=None,
+            )
+        )
 
-    # dedupe by serialized form
-    seen = set()
-    unique: List[FunctionCall] = []
+    # Only exact surface duplicates are removed. Canonically equivalent but differently
+    # serialized candidates must remain distinct for Candidate-vs-Class KD.
+    seen: set[str] = set()
+    unique: List[CandidateRecord] = []
     for c in candidates:
-        key = (c.name, tuple(sorted(c.arguments.items(), key=lambda x: x[0])))
-        if key in seen:
+        if c.serialized_call in seen:
             continue
-        seen.add(key)
+        seen.add(c.serialized_call)
         unique.append(c)
     return unique

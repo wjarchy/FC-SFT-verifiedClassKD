@@ -1,7 +1,7 @@
 """Tests for verifier parser."""
 
-from fc_class_kd.verifier.parser import parse_function_call, serialize_function_call
 from fc_class_kd.types import FunctionCall
+from fc_class_kd.verifier.parser import parse_function_call, serialize_function_call
 
 
 def test_parse_plain_json():

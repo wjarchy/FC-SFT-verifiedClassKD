@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional
 from fc_class_kd.types import FunctionCall, ToolSchema
 from fc_class_kd.verifier.schema_checker import find_tool_schema, normalize_param_type
 
-
 _DATE_PATTERNS = [
     ("%Y-%m-%d", r"^\d{4}-\d{2}-\d{2}$"),
     ("%Y/%m/%d", r"^\d{4}/\d{2}/\d{2}$"),

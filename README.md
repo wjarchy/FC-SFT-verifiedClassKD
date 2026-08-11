@@ -15,10 +15,13 @@ Verifier-defined Class-Level Distillation for single-turn, single-call Function 
 - 数据入口：xLAM / ToolACE adapter、筛选、固定 seed 划分。
 - 数学组件：候选序列分数、类别聚合、Candidate/Class KL、KL 分解。
 - 调试骨架：Qwen3 prompt、QLoRA 模型加载、4 条合成 smoke fixture。
-- 18 个 CPU 单元测试；2026-08-10 本机复核为 `18 passed`。
+- 31 个 CPU 单元测试；2026-08-11 在 Python 3.11 `wj` 环境复核为 `31 passed`。
 
 当前 checkout **不包含** 全量 `data/processed/`、`data/splits/`、模型权重或训练输出。
 历史机器曾报告 ToolACE-only 2688 条处理结果，但必须同步原文件或重跑后才能在本机复现。
+
+实现计划、研究定义决策和逐次工作记录分别见 `IMPLEMENTATION_PLAN.md`、`DECISIONS.md` 和
+`WORKLOG.md`。
 
 ## 快速开始
 

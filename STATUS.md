@@ -1,6 +1,6 @@
 # Fast Pilot 当前进度
 
-快照日期：2026-08-10
+快照日期：2026-08-11
 
 执行基线：`FC_ClassKD_Fast_Pilot_PRD_v4.md`
 
@@ -28,11 +28,31 @@
 
 ## 本机已验证
 
-- `python -m pytest -q`：**18 passed**（2026-08-10，CPU 最小测试环境）。
+- `python -m pytest -q`：**31 passed**（2026-08-11，Conda `wj`，Python 3.11，CPU PyTorch）。
 - 测试覆盖：parser、Verifier 基本分类、规范化幂等性、xLAM synthetic adapter、
-  rule candidate、sequence score、类别聚合、Candidate KL 分解、KD loss 有限性。
-- Git 当前历史有 3 个既有提交；两份 PRD 原先未跟踪。
-- 目标 GitHub 仓库可通过 SSH 访问，检查时为空仓库。
+  rule candidate surface/AST 分离、嵌套参数去重、sequence score、`unknown` 归一化、
+  Candidate KL 分解、Prompt mask/截断、评测 fail-fast、KD loss 有限性。
+- `ruff check src scripts tests --select E9,F,I`：通过。
+- Python 源码 `compileall`：通过。
+
+## 2026-08-11 静态正确性加固
+
+- 候选现同时保存 `serialized_call` 与 `parsed_call`，严格等价的不同表面序列不再被 AST 去重吞掉。
+- implicit-default 只删除与明确 Schema default 等价的 optional 参数，并二次验证等价性。
+- `unknown` 候选排除后 Teacher/Student 类别概率重新归一化；KL 分解在保留空间复核通过。
+- 嵌套 list/dict 参数不再因不可 hash 而使候选构建崩溃。
+- 预测条数、概率形状、温度、空输出和 Gold 截断改为显式报错。
+- Qwen3 Chat Template 显式 `enable_thinking=false`，并检查 Assistant label 边界。
+- 当前 equivalence helper 被明确限制为 reference/candidate audit，不能单独报告 generation
+  RobustnessDrop；paired model-visible perturbation 协议仍待冻结。
+- 详细理由见 `DECISIONS.md`，执行记录见 `WORKLOG.md`。
+
+## 当前实验室服务器环境阻塞
+
+- Conda `wj` 已建立，Python 3.11.15；当前只装 CPU 测试依赖。
+- NVIDIA kernel driver 为 `535.288.01`，NVML library 为 `580.173`，`nvidia-smi` 因版本失配失败。
+- 在驱动恢复前不得运行 GPU Smoke、模型打分或训练。
+- 根分区约剩余 70GB，无独立 `/data` 挂载；足够 Step 1 和受控本地 Gate，但正式模型缓存需严格控盘。
 
 ## 不能高估的历史结果
 

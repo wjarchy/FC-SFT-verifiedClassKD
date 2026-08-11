@@ -8,7 +8,6 @@ from typing import Any, Dict, Optional, Tuple
 
 from fc_class_kd.types import FunctionCall
 
-
 _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*([\{\[].*?)\s*```", re.DOTALL | re.IGNORECASE)
 _BRACE_RE = re.compile(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}")
 

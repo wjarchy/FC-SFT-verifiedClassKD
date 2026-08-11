@@ -2,12 +2,14 @@
 
 import math
 
+import pytest
 import torch
 
 from fc_class_kd.losses.kd_losses import candidate_kd_loss, class_kd_loss
 from fc_class_kd.scoring.aggregation import (
     aggregate_class_probabilities,
     candidate_probabilities,
+    class_distribution_tensor,
     decompose_candidate_kl,
     sequence_score,
 )
@@ -27,6 +29,11 @@ def test_candidate_probabilities_sum_to_one():
     assert abs(sum(probs) - 1.0) < 1e-9
 
 
+def test_candidate_probabilities_rejects_nonpositive_temperature():
+    with pytest.raises(ValueError, match="temperature"):
+        candidate_probabilities([1.0, 2.0], temperature=0.0)
+
+
 def test_class_aggregation_prd_example():
     """PRD §11.3: [0.30,0.20,0.10,0.40] + classes → [0.60, 0.40]."""
     probs = [0.30, 0.20, 0.10, 0.40]
@@ -42,6 +49,38 @@ def test_class_aggregation_prd_example():
     assert abs(agg[VerifierClass.WRONG_FUNCTION] - 0.40) < 1e-9
 
 
+def test_class_aggregation_excludes_unknown_and_renormalizes():
+    probs = [0.4, 0.3, 0.3]
+    labels = [
+        VerifierClass.CORRECT,
+        VerifierClass.WRONG_FUNCTION,
+        VerifierClass.UNKNOWN,
+    ]
+    classes = (VerifierClass.CORRECT, VerifierClass.WRONG_FUNCTION)
+    agg = aggregate_class_probabilities(probs, labels, classes)
+    assert abs(sum(agg.values()) - 1.0) < 1e-9
+    assert abs(agg[VerifierClass.CORRECT] - 4 / 7) < 1e-9
+    assert abs(agg[VerifierClass.WRONG_FUNCTION] - 3 / 7) < 1e-9
+
+
+def test_class_aggregation_rejects_mismatched_lengths():
+    with pytest.raises(ValueError, match="same length"):
+        aggregate_class_probabilities(
+            [0.5, 0.5],
+            [VerifierClass.CORRECT],
+        )
+
+
+def test_class_distribution_tensor_renormalizes_after_masking_unknown():
+    probs = torch.tensor([[0.4, 0.3, 0.3]], requires_grad=True)
+    indices = torch.tensor([[0, 1, -1]])
+    classes = class_distribution_tensor(probs, indices, num_classes=2)
+    assert torch.allclose(classes.sum(dim=-1), torch.ones(1))
+    assert torch.allclose(classes, torch.tensor([[4 / 7, 3 / 7]]), atol=1e-6)
+    classes[:, 0].sum().backward()
+    assert probs.grad is not None
+
+
 def test_kl_decomposition():
     teacher = [0.4, 0.3, 0.2, 0.1]
     student = [0.35, 0.25, 0.25, 0.15]
@@ -50,6 +89,19 @@ def test_kl_decomposition():
         VerifierClass.CORRECT,
         VerifierClass.WRONG_FUNCTION,
         VerifierClass.INVALID,
+    ]
+    kl_cand, kl_inter, kl_intra = decompose_candidate_kl(teacher, student, labels)
+    assert abs(kl_cand - (kl_inter + kl_intra)) < 1e-6
+
+
+def test_kl_decomposition_with_unknown_uses_known_candidate_distribution():
+    teacher = [0.4, 0.3, 0.2, 0.1]
+    student = [0.3, 0.25, 0.25, 0.2]
+    labels = [
+        VerifierClass.CORRECT,
+        VerifierClass.CORRECT,
+        VerifierClass.WRONG_FUNCTION,
+        VerifierClass.UNKNOWN,
     ]
     kl_cand, kl_inter, kl_intra = decompose_candidate_kl(teacher, student, labels)
     assert abs(kl_cand - (kl_inter + kl_intra)) < 1e-6

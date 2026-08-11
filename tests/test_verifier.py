@@ -2,7 +2,7 @@
 
 from fc_class_kd.types import FunctionCall, ToolParameter, ToolSchema, VerifierClass
 from fc_class_kd.verifier.classifier import classify_function_call
-from fc_class_kd.verifier.normalizer import canonicalize_call, calls_equivalent
+from fc_class_kd.verifier.normalizer import calls_equivalent, canonicalize_call
 
 
 def _weather_tools():

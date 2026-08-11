@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from fc_class_kd.types import FCRecord, FunctionCall
-from fc_class_kd.verifier.normalizer import canonicalize_call
+from fc_class_kd.verifier.normalizer import calls_equivalent, canonicalize_call
 from fc_class_kd.verifier.parser import serialize_function_call
 
 
@@ -20,21 +20,28 @@ def _key_reorder(call: FunctionCall) -> Optional[FunctionCall]:
 
 
 def _implicit_defaults(record: FCRecord) -> Optional[FunctionCall]:
-    """Gold with only required args — optional/default omitted."""
+    """Omit only optional values that equal an explicit schema default."""
     tool = next((t for t in record.tools if t.name == record.gold_call.name), None)
     if tool is None:
         return None
-    args = {}
-    for k, p in tool.parameters.items():
-        if p.required and k in record.gold_call.arguments:
-            args[k] = copy.deepcopy(record.gold_call.arguments[k])
-    if not args:
+    candidate = FunctionCall(
+        name=record.gold_call.name,
+        arguments=copy.deepcopy(record.gold_call.arguments),
+    )
+    removed_any = False
+    for key, spec in tool.parameters.items():
+        if spec.required or spec.default is None or key not in candidate.arguments:
+            continue
+        trial_args = copy.deepcopy(candidate.arguments)
+        del trial_args[key]
+        trial = FunctionCall(name=candidate.name, arguments=trial_args)
+        if calls_equivalent(trial, record.gold_call, record.tools):
+            candidate = trial
+            removed_any = True
+
+    if not removed_any or not calls_equivalent(candidate, record.gold_call, record.tools):
         return None
-    full = set(record.gold_call.arguments.keys())
-    minimal = set(args.keys())
-    if full == minimal:
-        return None
-    return FunctionCall(name=record.gold_call.name, arguments=args)
+    return candidate
 
 
 def build_equiv_variants(record: FCRecord) -> List[Dict[str, object]]:
@@ -83,7 +90,11 @@ def build_equiv_variants(record: FCRecord) -> List[Dict[str, object]]:
 
 
 def build_equiv_record(record: FCRecord, variant: Dict[str, object]) -> FCRecord:
-    """FCRecord where gold_call is equivalent variant (same tools/query)."""
+    """Reference-output variant; this does not perturb model-visible query/tools.
+
+    It is useful for verifier/candidate audits, but by itself cannot measure generation
+    robustness drop. A paired model-input perturbation protocol is still required.
+    """
     gold = FunctionCall.model_validate(variant["gold_call"])
     return FCRecord(
         id=f"{record.id}_equiv_{variant['variant_type']}",
@@ -113,6 +124,8 @@ def write_equivalence_diagnostic(
                     "record": equiv.model_dump(),
                     "variant_type": var["variant_type"],
                     "original_gold": var["original_gold"],
+                    "model_input_changed": False,
+                    "suitable_for_generation_robustness_drop": False,
                 }
                 f.write(json.dumps(row, ensure_ascii=False) + "\n")
                 count += 1

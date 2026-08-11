@@ -1,8 +1,8 @@
 """Tests for rule-based candidates."""
 
 from fc_class_kd.candidates.rules import build_rule_candidates
-from fc_class_kd.types import FunctionCall, ToolParameter, ToolSchema, VerifierClass
-from fc_class_kd.verifier.classifier import classify_function_call
+from fc_class_kd.types import FCRecord, FunctionCall, ToolParameter, ToolSchema, VerifierClass
+from fc_class_kd.verifier.classifier import classify_call
 
 
 def _record():
@@ -31,7 +31,47 @@ def test_build_rule_candidates_has_error_types():
     assert len(cands) >= 3
     labels = set()
     for c in cands:
-        res = classify_function_call(c, rec.tools, rec.gold_call)
+        res = classify_call(c.serialized_call, rec.tools, rec.gold_call)
         labels.add(res.class_label)
     assert VerifierClass.CORRECT in labels
     assert VerifierClass.WRONG_FUNCTION in labels or VerifierClass.WRONG_ARGUMENTS in labels
+
+
+def test_key_reorder_is_preserved_as_distinct_surface_candidate():
+    rec = _record()
+    cands = build_rule_candidates(rec, seed=42)
+    gold = next(c for c in cands if c.source == "gold")
+    reordered = next(c for c in cands if c.source == "strict_equivalent_key_reorder")
+
+    assert gold.serialized_call != reordered.serialized_call
+    assert gold.parsed_call == reordered.parsed_call
+    assert classify_call(
+        reordered.serialized_call, rec.tools, rec.gold_call
+    ).class_label == VerifierClass.CORRECT
+
+
+def test_nested_arguments_can_be_deduplicated_without_hash_errors():
+    tools = [
+        ToolSchema(
+            name="search",
+            parameters={
+                "filters": ToolParameter(type="object", required=True),
+                "tags": ToolParameter(type="array", required=True, unordered=True),
+            },
+        ),
+        ToolSchema(name="other", parameters={}),
+    ]
+    rec = FCRecord(
+        id="nested",
+        source="test",
+        query="q",
+        tools=tools,
+        gold_call=FunctionCall(
+            name="search",
+            arguments={"filters": {"country": "CN"}, "tags": ["a", "b"]},
+        ),
+    )
+
+    cands = build_rule_candidates(rec, seed=42)
+    surfaces = [candidate.serialized_call for candidate in cands]
+    assert len(surfaces) == len(set(surfaces))

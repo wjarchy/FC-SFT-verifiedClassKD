@@ -6,7 +6,6 @@ from typing import Any, List, Optional, Tuple
 
 from fc_class_kd.types import FunctionCall, ToolSchema
 
-
 _TYPE_ALIASES = {
     "str": "string",
     "string": "string",

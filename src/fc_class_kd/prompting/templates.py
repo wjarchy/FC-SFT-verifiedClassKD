@@ -6,7 +6,6 @@ import json
 from typing import Any, Dict, List, Optional, Tuple
 
 from fc_class_kd.types import FCRecord, FunctionCall, ToolSchema
-from fc_class_kd.verifier.parser import serialize_function_call
 
 
 def tool_schema_to_openai(tool: ToolSchema) -> Dict[str, Any]:
@@ -91,25 +90,13 @@ def apply_chat_template(
     messages: List[Dict[str, Any]] = [{"role": "user", "content": build_user_message(record)}]
     if gold_call is not None:
         messages = build_training_messages(record, gold_call)
-    try:
-        return tokenizer.apply_chat_template(
-            messages,
-            tools=tools,
-            tokenize=False,
-            add_generation_prompt=add_generation_prompt,
-        )
-    except TypeError:
-        # Fallback: tools embedded in user message
-        tools_blob = json.dumps(tools, ensure_ascii=False)
-        user = f"{build_user_message(record)}\n\nAvailable tools:\n{tools_blob}"
-        fallback = [{"role": "user", "content": user}]
-        if gold_call is not None:
-            fallback.append({"role": "assistant", "content": serialize_function_call(gold_call)})
-        return tokenizer.apply_chat_template(
-            fallback,
-            tokenize=False,
-            add_generation_prompt=add_generation_prompt,
-        )
+    return tokenizer.apply_chat_template(
+        messages,
+        tools=tools,
+        tokenize=False,
+        add_generation_prompt=add_generation_prompt,
+        enable_thinking=False,
+    )
 
 
 def encode_sft_pair(
@@ -126,10 +113,19 @@ def encode_sft_pair(
     )
     full_ids = tokenizer(full_text, add_special_tokens=False)["input_ids"]
     prompt_ids = tokenizer(prompt_text, add_special_tokens=False)["input_ids"]
+    if len(full_ids) > max_length:
+        raise ValueError(
+            f"encoded sample {record.id} has {len(full_ids)} tokens and would truncate "
+            f"the assistant call at max_length={max_length}"
+        )
+    if len(prompt_ids) >= len(full_ids):
+        raise ValueError(f"sample {record.id} has no assistant output tokens to supervise")
+    if full_ids[: len(prompt_ids)] != prompt_ids:
+        raise ValueError(
+            f"generation prompt tokens are not a prefix of the full training sequence for {record.id}"
+        )
+
     labels = [-100] * len(full_ids)
     for i in range(len(prompt_ids), len(full_ids)):
         labels[i] = full_ids[i]
-    if len(full_ids) > max_length:
-        full_ids = full_ids[:max_length]
-        labels = labels[:max_length]
     return full_ids, labels

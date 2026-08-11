@@ -28,6 +28,10 @@ def main() -> None:
     out = Path(args.out or Path(cfg.paths.diagnostics) / "equivalence_variants.jsonl")
     n = write_equivalence_diagnostic(records, out)
     console.print(f"Wrote {n} equivalence variants → {out}")
+    console.print(
+        "[yellow]Reference/candidate audit variants only: query/tools are unchanged, "
+        "so this file alone must not be used to report generation RobustnessDrop.[/yellow]"
+    )
 
 
 if __name__ == "__main__":

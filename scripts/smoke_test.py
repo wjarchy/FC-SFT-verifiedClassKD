@@ -18,7 +18,7 @@ from fc_class_kd.losses.kd_losses import class_kd_loss
 from fc_class_kd.prompting.templates import encode_sft_pair
 from fc_class_kd.training.model_utils import attach_lora, load_student_model, max_memory_mb
 from fc_class_kd.types import FCRecord
-from fc_class_kd.verifier.classifier import classify_function_call
+from fc_class_kd.verifier.classifier import classify_call
 
 FIXTURE_PATH = Path(__file__).resolve().parents[1] / "data" / "fixtures" / "smoke_4.jsonl"
 
@@ -77,8 +77,8 @@ def main() -> int:
         cands = build_rule_candidates(rec, seed=42)
         print(f"  [{rec.id}] rule candidates: {len(cands)}")
         for c in cands[:3]:
-            res = classify_function_call(c, rec.tools, rec.gold_call)
-            print(f"    -> {res.class_label.value}")
+            res = classify_call(c.serialized_call, rec.tools, rec.gold_call)
+            print(f"    {c.source} -> {res.class_label.value}")
 
     torch.cuda.reset_peak_memory_stats()
     model, tokenizer = load_student_model(
