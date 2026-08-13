@@ -10,6 +10,11 @@ hardware:
   gradient_checkpointing: true
   max_length: 1536
 
+training:
+  micro_batch_size: 1
+  gradient_checkpointing: true
+  max_length: 1536
+
 candidates:
   K: 6
 

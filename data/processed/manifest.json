@@ -1,0 +1,96 @@
+{
+  "manifest_version": 1,
+  "created_at_utc": "2026-08-12T08:21:08.298177+00:00",
+  "command": "scripts/build_data.py --sources xlam toolace --xlam-revision 26d14ebfe18b1f7b524bd39b404b50af5dc97866 --toolace-revision 74befe8a24c760ccad2b5d58bcf35d89b3bbd2be --toolace-schema-revision 6bda777c88d21e5a204703c1ee45597a8fa4f734 --bfcl-leakage-report reports/BFCL数据泄漏检查.json --seed 42",
+  "source_datasets": {
+    "xlam": {
+      "repo_id": "Salesforce/xlam-function-calling-60k",
+      "revision": "26d14ebfe18b1f7b524bd39b404b50af5dc97866"
+    },
+    "toolace": {
+      "repo_id": "tryumanshow/ToolACE-Qwen-cleaned",
+      "revision": "74befe8a24c760ccad2b5d58bcf35d89b3bbd2be",
+      "schema_repo_id": "Team-ACE/ToolACE",
+      "schema_revision": "6bda777c88d21e5a204703c1ee45597a8fa4f734",
+      "schema_restoration": "unique query match plus ordered tool-description/parameter-key structure; cleaned function names retained"
+    }
+  },
+  "parameters": {
+    "sources": [
+      "xlam",
+      "toolace"
+    ],
+    "xlam_limit": null,
+    "toolace_limit": null,
+    "train_size": 2000,
+    "val_size": 300,
+    "internal_test_size": 500,
+    "diagnostic_size": 250,
+    "equivalence_size": 200,
+    "seed": 42,
+    "deduplication": "NFKC lowercase alphanumeric-token query",
+    "bfcl_leakage_report": "reports/BFCL数据泄漏检查.json"
+  },
+  "counts": {
+    "processed_deduplicated": 3250,
+    "processed_by_source": {
+      "toolace": 2103,
+      "xlam": 1147
+    },
+    "selection": {
+      "strategy": "all_toolace_plus_seeded_xlam_fill",
+      "target_total": 3250,
+      "available_after_exact_query_dedup": {
+        "toolace": 2103,
+        "xlam": 17924
+      },
+      "selected_by_source": {
+        "toolace": 2103,
+        "xlam": 1147
+      }
+    },
+    "split_assigned": 3250,
+    "processed_unassigned_after_proportional_rounding": 0,
+    "splits": {
+      "diagnostic": 250,
+      "equivalence_diagnostic": 200,
+      "internal_test": 500,
+      "train": 2000,
+      "val": 300
+    }
+  },
+  "files": {
+    "data/processed/all_records.jsonl": {
+      "bytes": 8578123,
+      "sha256": "472b5b8538c5ed12edeccf784db9ee331385e3f9c0077cdeb6515d09e6977ddf"
+    },
+    "data/splits/diagnostic.jsonl": {
+      "bytes": 665922,
+      "sha256": "9faad4213347fb1112ad400490d9eccc4707ad2919f10a2fce2e362e552d2f83"
+    },
+    "data/splits/equivalence_diagnostic.jsonl": {
+      "bytes": 514657,
+      "sha256": "7bf86d6848f780b4374d65278859bdc95cf5427fc8c095854939fb0d6f74ac52"
+    },
+    "data/splits/internal_test.jsonl": {
+      "bytes": 1352003,
+      "sha256": "d9370a2ed824e10a621f41e13fed649a40b35267e3c928f736a743156c28bead"
+    },
+    "data/splits/train.jsonl": {
+      "bytes": 5214713,
+      "sha256": "2f4353932c9c0da0397d88419bed71859fdd46383768b327e2693cca28dfd49a"
+    },
+    "data/splits/val.jsonl": {
+      "bytes": 830828,
+      "sha256": "a0e32d497ae8d4e0afe6876412dac82eb8ab151b319f6eaf3dc4dd08d4948e63"
+    }
+  },
+  "benchmark_leakage": {
+    "bfcl_included_as_source": false,
+    "bfcl_revision": "6ea57973c7a6097fd7c5915698c54c17c5b1b6c8",
+    "report_path": "reports/BFCL数据泄漏检查.json",
+    "report_sha256": "3041e69f22533faa64d42b4bb383dd1f36712f76497fea993003a29cdbb209ac",
+    "status": "exact_and_high_similarity_xlam_matches_excluded",
+    "limitations": "Text similarity cannot prove absence of all semantic leakage."
+  }
+}

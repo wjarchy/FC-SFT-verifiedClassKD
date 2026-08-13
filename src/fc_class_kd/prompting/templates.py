@@ -6,6 +6,7 @@ import json
 from typing import Any, Dict, List, Optional, Tuple
 
 from fc_class_kd.types import FCRecord, FunctionCall, ToolSchema
+from fc_class_kd.verifier.parser import serialize_function_call
 
 
 def tool_schema_to_openai(tool: ToolSchema) -> Dict[str, Any]:
@@ -128,4 +129,59 @@ def encode_sft_pair(
     labels = [-100] * len(full_ids)
     for i in range(len(prompt_ids), len(full_ids)):
         labels[i] = full_ids[i]
+    return full_ids, labels
+
+
+def render_candidate_completion(
+    tokenizer: Any,
+    record: FCRecord,
+    serialized_call: str,
+) -> str:
+    """Wrap a candidate surface form with the model's native assistant/tool-call syntax.
+
+    The wrapper is derived from the native gold rendering instead of hard-coding Qwen's
+    XML markers. Replacing only the gold JSON body preserves surface differences such as
+    argument key order and also permits deliberately invalid candidate JSON.
+    """
+    if not serialized_call:
+        raise ValueError("serialized_call must be non-empty")
+    prompt = apply_chat_template(tokenizer, record, add_generation_prompt=True)
+    gold_full = apply_chat_template(
+        tokenizer,
+        record,
+        gold_call=record.gold_call,
+        add_generation_prompt=False,
+    )
+    if not gold_full.startswith(prompt):
+        raise ValueError(f"native candidate prompt is not a prefix for {record.id}")
+    completion = gold_full[len(prompt):]
+    gold_surface = serialize_function_call(record.gold_call, sort_keys=False)
+    if completion.count(gold_surface) != 1:
+        raise ValueError(
+            f"could not uniquely locate the gold call surface in native template for {record.id}"
+        )
+    return completion.replace(gold_surface, serialized_call, 1)
+
+
+def encode_candidate_pair(
+    tokenizer: Any,
+    record: FCRecord,
+    serialized_call: str,
+    max_length: int = 1024,
+) -> Tuple[List[int], List[int]]:
+    """Encode one arbitrary candidate; labels identify only its completion tokens."""
+    prompt_text = apply_chat_template(tokenizer, record, add_generation_prompt=True)
+    completion = render_candidate_completion(tokenizer, record, serialized_call)
+    prompt_ids = tokenizer(prompt_text, add_special_tokens=False)["input_ids"]
+    full_ids = tokenizer(prompt_text + completion, add_special_tokens=False)["input_ids"]
+    if len(full_ids) > max_length:
+        raise ValueError(
+            f"candidate for {record.id} has {len(full_ids)} tokens and exceeds "
+            f"max_length={max_length}"
+        )
+    if full_ids[: len(prompt_ids)] != prompt_ids:
+        raise ValueError(f"candidate prompt tokens are not a prefix for {record.id}")
+    if len(prompt_ids) >= len(full_ids):
+        raise ValueError(f"candidate for {record.id} has no output tokens to score")
+    labels = [-100] * len(prompt_ids) + full_ids[len(prompt_ids):]
     return full_ids, labels

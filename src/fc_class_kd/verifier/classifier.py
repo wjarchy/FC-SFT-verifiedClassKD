@@ -37,6 +37,22 @@ def classify_call(
             details=[err or "parse_failed"],
         )
 
+    available_names = {tool.name for tool in tools}
+    if call.name not in available_names:
+        return VerifierResult(
+            class_label=VerifierClass.WRONG_FUNCTION,
+            parse_ok=True,
+            details=["function_not_in_schema"],
+        )
+    # Function selection is the primary structural decision. Malformed arguments for a
+    # distractor function must not hide the more fundamental wrong-function error.
+    if call.name != gold_call.name:
+        return VerifierResult(
+            class_label=VerifierClass.WRONG_FUNCTION,
+            parse_ok=True,
+            details=["function_name_mismatch"],
+        )
+
     valid, issues, kind = check_schema(call, tools)
     if not valid:
         if kind == "wrong_function":
@@ -56,14 +72,6 @@ def classify_call(
         )
 
     canon = canonicalize_call(call, tools, gold_call)
-    if call.name != gold_call.name:
-        return VerifierResult(
-            class_label=VerifierClass.WRONG_FUNCTION,
-            canonical_call=canon,
-            parse_ok=True,
-            details=["function_name_mismatch"],
-        )
-
     if calls_equivalent(call, gold_call, tools):
         return VerifierResult(
             class_label=VerifierClass.CORRECT,

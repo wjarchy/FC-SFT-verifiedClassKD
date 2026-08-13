@@ -16,8 +16,10 @@ from fc_class_kd.config import load_config
 from fc_class_kd.data.splits import read_split
 from fc_class_kd.losses.kd_losses import class_kd_loss
 from fc_class_kd.prompting.templates import encode_sft_pair
+from fc_class_kd.scoring.aggregation import class_distribution_tensor
+from fc_class_kd.training.candidate_scoring import score_candidate_sequences
 from fc_class_kd.training.model_utils import attach_lora, load_student_model, max_memory_mb
-from fc_class_kd.types import FCRecord
+from fc_class_kd.types import PRIMARY_CLASSES, FCRecord
 from fc_class_kd.verifier.classifier import classify_call
 
 FIXTURE_PATH = Path(__file__).resolve().parents[1] / "data" / "fixtures" / "smoke_4.jsonl"
@@ -124,16 +126,55 @@ def main() -> int:
         print("SMOKE_FAIL: frozen base parameters received gradients")
         return 1
 
-    t_probs = torch.tensor([[0.5, 0.25, 0.15, 0.1]], device=model.device)
-    student_class_logits = torch.zeros_like(t_probs, requires_grad=True)
-    s_log = torch.log_softmax(student_class_logits, dim=-1)
-    loss_kd = class_kd_loss(s_log, t_probs, temperature=1.0)
+    model.zero_grad(set_to_none=True)
+    kd_candidates = build_rule_candidates(rec, seed=42)[:4]
+    class_lookup = {label: index for index, label in enumerate(PRIMARY_CLASSES)}
+    class_indices = torch.tensor(
+        [[class_lookup.get(classify_call(c.serialized_call, rec.tools, rec.gold_call).class_label, -1)
+          for c in kd_candidates]],
+        device=model.device,
+    )
+    student_scores = score_candidate_sequences(
+        model,
+        tokenizer,
+        rec,
+        kd_candidates,
+        max_length=int(cfg.training.max_length),
+        alpha=float(cfg.scoring.alpha),
+    ).unsqueeze(0)
+    student_candidate_probs = torch.softmax(student_scores, dim=-1)
+    student_class_probs = class_distribution_tensor(
+        student_candidate_probs,
+        class_indices,
+        len(PRIMARY_CLASSES),
+    )
+    # A fixed, deliberately different teacher distribution keeps this an engineering
+    # gradient test; formal teacher probabilities are cached in PRD Step 6.
+    teacher_candidate_probs = torch.softmax(
+        student_scores.detach() + torch.tensor([[0.4, -0.2, 0.3, -0.1]], device=model.device),
+        dim=-1,
+    )
+    teacher_class_probs = class_distribution_tensor(
+        teacher_candidate_probs,
+        class_indices,
+        len(PRIMARY_CLASSES),
+    )
+    loss_kd = class_kd_loss(
+        torch.log(student_class_probs.clamp_min(1e-12)),
+        teacher_class_probs,
+        temperature=1.0,
+    )
     loss_kd.backward()
-    if not torch.isfinite(loss_kd) or student_class_logits.grad is None:
-        print("SMOKE_FAIL: standalone Class KD gradient check failed")
+    has_end_to_end_lora_grad = any(
+        p.grad is not None and p.grad.abs().sum() > 0
+        for p in model.parameters()
+        if p.requires_grad
+    )
+    if not torch.isfinite(loss_kd) or not has_end_to_end_lora_grad:
+        print("SMOKE_FAIL: end-to-end Class KD → LoRA gradient check failed")
         return 1
-    print(f"Standalone Class KD toy loss: {loss_kd.item():.4f}")
-    print("Note: end-to-end Class KD → LoRA gradient test remains a Step 7 integration test")
+    print(f"End-to-end Class KD loss: {loss_kd.item():.6f}")
+    print("End-to-end Class KD → candidate scores → LoRA gradient: OK")
 
     with tempfile.TemporaryDirectory() as tmp:
         adapter_dir = Path(tmp) / "adapter"

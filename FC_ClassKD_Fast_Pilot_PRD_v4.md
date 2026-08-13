@@ -1,8 +1,13 @@
-# Function Calling Class-Level Distillation — Fast Pilot PRD v4
+# Function Calling Class-Level Distillation — Fast Pilot PRD v4（当前修订版）
 
 > **目的**：用尽可能少的训练 Run 和租卡成本，尽快判断“Verifier-defined Class KD”是否值得继续投入。  
 > **原则**：Fast Pilot 只回答“有没有可信正向信号”，不在第一轮证明完整论文的所有 RQ。  
 > **正式论文的 RQ1–RQ4 仍保留，但 RQ2/RQ3/RQ4 的完整归因放到 Pilot 通过之后。**
+
+> **2026-08-12 修订说明**：本文件现在是当前实验的最高执行基线。主要修订为：先训练公共 S0，
+> 再比较 Teacher 与 S0；Train 和 Diagnostic 分别构造 K=6 候选池；正式人工审核从加入 S0
+> 真实错误后的完整候选池抽样；ToolACE 必须恢复原始 Team-ACE 参数说明。若本文件与旧工作记录冲突，
+> 以本修订版和根目录 `实验决策记录.md` 为准。
 
 ---
 
@@ -337,39 +342,16 @@ Qwen3-0.6B
 
 ---
 
-## 2.2 GPU 分工
+## 2.2 当前 GPU 环境
 
-### 实验室 RTX 2080 Ti 11GB
-
-负责：
-
-- 环境搭建
-- 数据处理
-- Verifier
-- Candidate 构造
-- 0.6B Smoke Test
-- 1.7B Tiny Overfit
-- 8B INT4 小样本预诊断
-
-默认：
-
-```yaml
-fp16: true
-bf16: false
-micro_batch_size: 1
-gradient_checkpointing: true
-max_length: 1024
-```
-
-### RTX 4090 24GB
-
-只在 Fast Pilot 已经通过本地 Smoke / Diagnostic 后租用。
+当前主实验机器为 AutoDL RTX 3090 24GB，已经确认 CUDA、BF16、4-bit QLoRA 可用。
 
 负责：
 
-- Qwen3-8B 正式 Teacher Cache
-- Qwen3-1.7B 三个正式训练分支
-- BFCL 推理评测
+- 0.6B 冒烟与小样本过拟合
+- 1.7B 公共 S0 和三条训练分支
+- 8B 小规模诊断与完整 Train 候选打分
+- Internal、Equivalence 和 BFCL 推理
 
 默认：
 
@@ -377,9 +359,13 @@ max_length: 1024
 bf16: true
 micro_batch_size: 1
 gradient_checkpointing: true
-max_length: 1024-1536
+max_length: 2048
 K: 6
 ```
+
+实验室 RTX 2080 Ti 11GB 可以承担代码检查、小规模候选构造或较短序列调试，但不再把它写成
+正式流程的固定前置机器。若 8B 在 3090 上显存不足，先减小打分批次或序列长度，再决定是否换卡；
+不能因此改变模型、数据或候选池定义。
 
 ---
 
@@ -410,6 +396,52 @@ Fast Pilot 不追求完整论文规模。
 - Gold Call 可稳定解析
 
 BFCL 测试数据不得进入训练、候选构造或超参数选择。
+
+## 3.1 当前数据状态
+
+当前已固定 3,250 条合并数据：保留全部 2,103 条恢复原始参数说明的 ToolACE，再从去重、
+去 BFCL 泄漏且 Gold 合法的 xLAM 中按 seed=42 补入 1,147 条。正式划分为：
+
+| Split | 当前数量 |
+|---|---:|
+| Train | 2,000 |
+| Validation | 300 |
+| Internal Test | 500 |
+| Diagnostic | 250 |
+| Equivalence Diagnostic | 200 |
+
+3,250 条全部且仅进入一个划分，ID 和规范化问题文本均唯一，五个划分互不重叠。正式全集 SHA256
+为 `472b5b8538c...`，完整哈希见 `data/processed/manifest.json`。
+
+## 3.2 ToolACE 参数说明规则
+
+`tryumanshow/ToolACE-Qwen-cleaned` 的上游 Parquet 已经丢失参数必填信息，并给绝大多数参数填入
+默认值，其中大量整数、浮点数和布尔参数的默认值还是空字符串。该问题不是本项目适配器制造的，
+但旧流程曾错误地直接采用这份参数说明。
+
+当前强制规则：
+
+- cleaned ToolACE 只提供整理后的单轮、单调用内容和函数名。
+- `required`、`type`、`enum`、`default` 从固定版本的原始 `Team-ACE/ToolACE` 恢复。
+- 只接受用户问题唯一匹配，且工具顺序、工具说明、参数名集合完全一致的数据。
+- 恢复后 Gold 不合法的样本必须剔除。
+- 正式加载器未提供原始 Team-ACE 版本时直接报错，禁止静默回退。
+
+详细筛选过程见 `docs/ToolACE数据修复与筛选说明.md`。
+
+## 3.3 xLAM 参数说明与泄漏处理
+
+xLAM 固定版本为 `26d14ebf...`。实际 JSON 与数据卡示例不完全一致：参数没有显式 `required`，
+可选性写在 `str, optional` 等类型字符串中，而且默认值存在大量类型不匹配。当前采用保守规则：
+
+- 支持并规范化 `str/int/float/bool/List/Tuple/set/Dict` 等顶层类型。
+- `Callable` 等无法可靠映射到 JSON 的类型整条剔除。
+- 有 `optional` 或默认字段的参数视为可选；其余视为必填。
+- xLAM 默认值全部不参与等价规范化，防止制造假等价。
+- Gold 在上述参数说明下不合法的数据剔除。
+- 与固定 BFCL v4 提交 `6ea5797...` 完全相同或达到高相似阈值的问题全部剔除。
+
+结构审计和筛选数量见 `docs/xLAM数据筛选说明.md` 与 `reports/合并数据质量报告.md`。
 
 ---
 
@@ -451,9 +483,16 @@ Fast Pilot 不做复杂语义 Judge。
 
 ---
 
-## 4.4 Verifier Fast Gate
+## 4.4 Verifier 人工审核门槛
 
-正式训练前抽检 100–200 个候选。
+公共 S0 只学习 Train Gold，不依赖候选池或 Verifier，因此可以先训练。正式人工审核阻塞的是：
+
+- 候选池冻结
+- 完整 Train Teacher Scores 缓存
+- Candidate KD 与 Class KD 训练
+
+加入 S0 真实错误并补齐 K=6 后，从最终 Train 和 Diagnostic 候选池分层抽检 100–200 个候选。
+必须覆盖四个主类和 S0 真实错误。S0 前的规则候选盲标包只能作为早期检查，不能代替正式审核。
 
 要求：
 
@@ -467,103 +506,66 @@ overall audited accuracy >= 95%
 ```text
 STOP
 → 修 Verifier
-→ 不进入正式训练
+→ 重建候选池并重新人工审核
+→ 不进入 Teacher 完整缓存和蒸馏训练
 ```
 
 ---
 
-# 5. Pre-Diagnostic：正式租卡前必须完成
+# 5. Pre-Diagnostic：公共 S0 和完整诊断候选池之后进行
 
-样本：
+使用 200–300 条独立 Diagnostic。当前正式划分为 250 条。Pre-Diagnostic 不使用 Train、
+Validation、Internal Test、Equivalence Diagnostic 或 BFCL，分成自由生成和候选类选择两部分。
 
-```text
-200–300 条
-```
+## 5.1 自由生成能力差距
 
-检查：
+S0 与 8B Teacher 在完全相同的 Diagnostic 输入上直接生成工具调用，报告：
 
-## 5.1 Teacher 是否够强
+- Parse Success
+- Function Name Accuracy
+- Argument Accuracy
+- AST / Canonical Call Accuracy
+- Wrong Function / Wrong Arguments / Invalid
+
+S0 AST 建议处于 40%–80%。高于 85% 说明任务可能过简单；低于 20% 时优先排查 Prompt、
+Chat Template、Tool Schema、Label Mask、Truncation 和 Parser。Teacher 应明显强于 S0，
+但自由生成部分先如实报告差值，不套用候选类 Top-1 的 80% 门槛。
+
+## 5.2 候选类选择能力差距
+
+S0 与 Teacher 对完全相同的 K=6 Diagnostic 候选池打分，检查 Teacher 是否能把概率集中到
+Verifier 定义的正确类，而不是要求 Teacher 每条都选对。
 
 要求优先满足：
 
 ```text
 Teacher Class Top-1 >= 80%
-Teacher - Student >= 5 percentage points
+Teacher - S0 >= 5 percentage points
 ```
 
-理想：
+理想差距：
 
 ```text
-Teacher - Student >= 8 points
+Teacher - S0 >= 8 points
 ```
 
----
+## 5.3 Candidate Pool 是否有意义
 
-## 5.2 Candidate Pool 是否有意义
+至少 90% 的样本含有一个有效错误候选。错误不能主要是随机乱码，并且必须包含一定比例的
+`wrong_function` 和 `wrong_arguments`。
 
-要求：
+## 5.4 等价样本是否足够
 
-```text
->= 90% 样本至少有一个有效错误候选
-```
+至少满足以下一项：
 
-错误不能主要是随机乱码。
+- 自然或安全构造的 multi-valid 样本至少占 10%。
+- 单独构造约 200 条高精度 Equivalence Diagnostic。
 
-必须包含一定比例：
+## 5.5 通过后的动作
 
-```text
-wrong_function
-wrong_arguments
-```
-
----
-
-## 5.3 等价样本是否足够
-
-至少满足之一：
-
-```text
-自然 / 安全构造的 multi-valid 样本 >= 10%
-```
-
-或者：
-
-```text
-单独构造约 200 条高精度 Equivalence Diagnostic
-```
-
----
-
-## 5.4 Student 难度是否合理
-
-Vanilla / Initial Student AST 建议：
-
-```text
-40%–80%
-```
-
-若：
-
-```text
-> 85%
-```
-
-任务可能过简单。
-
-若：
-
-```text
-< 20%
-```
-
-优先排查：
-
-- Prompt
-- Chat Template
-- Tool Schema
-- Label Mask
-- Truncation
-- Parser
+只有自由生成差距、候选类差距、候选质量和等价覆盖都合理，才对完整 Train K=6 候选池运行
+8B Teacher 打分并保存 Teacher Scores。诊断失败时先停止扩大计算，不用 Internal Test 或 BFCL
+反复试验来调整门槛。
 
 ---
 
@@ -571,7 +573,8 @@ Vanilla / Initial Student AST 建议：
 
 ## 6.1 共同初始化
 
-先训练一个公共 Vanilla SFT Student：
+先只用 Train Gold 训练一个公共 Vanilla SFT Student。该阶段不能使用候选、Verifier 标签或
+Teacher Scores：
 
 ```text
 Base Qwen3-1.7B
@@ -588,6 +591,18 @@ S0 LoRA Adapter
 S0 validation metrics
 S0 predictions
 ```
+
+当前固定训练方式：Train 2,000 条，训练三轮；4-bit QLoRA，微批次 1，梯度累计 16，学习率
+`2e-4`，3% warmup 后余弦下降，最大长度 2,048。每轮在完整 Validation 300 条自由生成，首先
+选择 AST 最高的轮次；AST 相同则选择 Validation loss 更低的轮次；仍相同则选更早轮次。
+Internal Test、Diagnostic、Equivalence Diagnostic 和 BFCL 不参与选择 S0。
+
+S0 随后分别对 Train 和 Diagnostic 自由生成：
+
+- Train 生成结果用于构造训练候选池。
+- Diagnostic 生成结果用于构造诊断候选池。
+- 两套候选池禁止交叉使用。
+- Internal Test、Equivalence Diagnostic 和 BFCL 不构造训练候选。
 
 ---
 
@@ -882,12 +897,15 @@ fc_class_kd/
 ├── configs/
 │   ├── base.yaml
 │   ├── rtx2080ti.yaml
+│   ├── rtx3090.yaml
 │   └── rtx4090.yaml
 ├── data/
 │   ├── raw/
 │   ├── processed/
 │   ├── splits/
-│   └── diagnostics/
+│   ├── diagnostics/
+│   ├── candidates/
+│   └── cache/
 ├── src/
 │   ├── data/
 │   ├── verifier/
@@ -932,7 +950,7 @@ RL
 
 # 11. 最小测试要求
 
-正式租 4090 前必须通过：
+正式训练 S0 或运行 8B Teacher 前必须通过：
 
 ## 11.1 Tiny Overfit
 
@@ -1028,15 +1046,15 @@ Class KD loss.backward()
 
 ```text
 reports/
-├── environment.md
-├── verifier_audit.md
-├── diagnostic.md
-├── candidate_stats.md
-├── fast_pilot_results.md
-└── go_no_go.md
+├── 实验环境记录.md
+├── 验证器审核进度.md
+├── 能力诊断结果.md
+├── 候选池正式统计.md
+├── 快速试验正式结果.md
+└── 是否继续实验结论.md
 ```
 
-`fast_pilot_results.md` 必须只有一张主表：
+`快速试验正式结果.md` 必须包含一张统一主表：
 
 | Method | Internal AST | BFCL | Equiv AST | Robustness Drop |
 |---|---:|---:|---:|---:|
@@ -1059,34 +1077,40 @@ reports/
 
 ```text
 Step 1
-环境 + 数据 + Verifier
+环境 + 数据修复 + 自动检查
         ↓
 Step 2
 0.6B Smoke / Tiny Overfit
         ↓
 Step 3
-200–300 样本 Pre-Diagnostic
+训练公共 1.7B SFT Student S0
+        ↓
+Step 4
+S0 分别对 Train / Diagnostic 自由生成
+构造两套完整 K=6 Candidate Pool
+        ↓
+Step 5
+人工审核最终候选中的 Verifier 标签
+通过后冻结候选池和文件哈希
+        ↓
+Step 6
+Diagnostic 上完成 Teacher vs S0：
+自由生成 + 候选类 Top-1
         ↓
        Gate
    Fail → Stop
         ↓ Pass
-Step 4
-训练公共 1.7B SFT Student S0
-        ↓
-Step 5
-构造并冻结 K=6 Candidate Pool
-        ↓
-Step 6
-离线缓存 8B Teacher Scores
-        ↓
 Step 7
+离线缓存完整 Train 的 8B Teacher Scores
+        ↓
+Step 8
 从 S0 跑三条同预算分支：
 SFT-cont / Candidate KD / Class KD
         ↓
-Step 8
+Step 9
 Internal + Equivalence + BFCL
         ↓
-Step 9
+Step 10
 Go / Weak-Go / No-Go
 ```
 
@@ -1122,10 +1146,11 @@ Go / Weak-Go / No-Go
 Fast Pilot 完成只要求以下项目：
 
 - [ ] 环境和模型可运行
-- [ ] Verifier 审计通过
-- [ ] Candidate Pool K=6 可复现
-- [ ] Teacher / Student 预诊断通过
 - [ ] 公共 SFT Student S0 完成
+- [ ] Train / Diagnostic 两套 Candidate Pool K=6 可复现
+- [ ] 最终候选池上的 Verifier 人工审核通过
+- [ ] Teacher / S0 自由生成和候选类预诊断通过
+- [ ] 完整 Train Teacher Scores 已冻结
 - [ ] SFT Continuation 完成
 - [ ] Candidate KD 完成
 - [ ] Class KD 完成

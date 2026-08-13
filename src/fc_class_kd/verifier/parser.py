@@ -4,45 +4,66 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 from fc_class_kd.types import FunctionCall
 
 _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*([\{\[].*?)\s*```", re.DOTALL | re.IGNORECASE)
-_BRACE_RE = re.compile(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}")
 
 
 def _strip_text(text: str) -> str:
     return text.strip()
 
 
-def _try_json_loads(text: str) -> Optional[Any]:
+def _try_json_loads(text: str) -> Any | None:
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         return None
 
 
-def _extract_json_object(text: str) -> Optional[Dict[str, Any]]:
+def extract_function_call_surface(text: str) -> str | None:
+    """Return the exact first decodable call-shaped JSON object in model text."""
     text = _strip_text(text)
     direct = _try_json_loads(text)
     if isinstance(direct, dict):
-        return direct
+        return text
 
     for match in _JSON_BLOCK_RE.finditer(text):
-        obj = _try_json_loads(match.group(1))
-        if isinstance(obj, dict):
-            return obj
-
-    for match in _BRACE_RE.finditer(text):
-        obj = _try_json_loads(match.group(0))
+        surface = match.group(1).strip()
+        obj = _try_json_loads(surface)
         if isinstance(obj, dict) and "name" in obj:
-            return obj
+            return surface
+
+    # Model completions normally wrap the JSON in <tool_call> tags.  A brace regex is
+    # unsafe here: braces may be nested arbitrarily or appear inside quoted strings.
+    # Let the standard decoder find the end of each candidate object instead.
+    decoder = json.JSONDecoder()
+    for start, char in enumerate(text):
+        if char != "{":
+            continue
+        try:
+            obj, end = decoder.raw_decode(text[start:])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(obj, dict) and "name" in obj:
+            return text[start : start + end]
 
     return None
 
 
-def parse_function_call(text: str) -> Tuple[Optional[FunctionCall], Optional[str]]:
+def _extract_json_object(text: str) -> dict[str, Any] | None:
+    surface = extract_function_call_surface(text)
+    if surface is None:
+        return None
+    obj = _try_json_loads(surface)
+    if isinstance(obj, dict):
+        return obj
+
+    return None
+
+
+def parse_function_call(text: str) -> tuple[FunctionCall | None, str | None]:
     """
     Parse a function call from raw model output or JSON string.
 

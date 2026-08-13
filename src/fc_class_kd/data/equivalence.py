@@ -15,7 +15,11 @@ from fc_class_kd.verifier.parser import serialize_function_call
 def _key_reorder(call: FunctionCall) -> Optional[FunctionCall]:
     if len(call.arguments) < 2:
         return None
-    keys = sorted(call.arguments.keys(), reverse=True)
+    keys = list(call.arguments.keys())
+    if keys == sorted(keys):
+        keys.reverse()
+    else:
+        keys.sort()
     return FunctionCall(name=call.name, arguments={k: call.arguments[k] for k in keys})
 
 

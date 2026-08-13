@@ -25,11 +25,23 @@ _TYPE_ALIASES = {
 
 
 def normalize_param_type(raw: str) -> str:
-    return _TYPE_ALIASES.get(raw.lower().strip(), raw.lower().strip())
+    cleaned = raw.lower().strip()
+    # xLAM stores Python-style annotations and may append ", optional" or a textual
+    # default to the type string.  The verifier only needs the top-level JSON type.
+    if cleaned.startswith(("list[", "tuple[")) or cleaned in {"list", "tuple", "set"}:
+        return "array"
+    if cleaned.startswith("dict[") or cleaned == "dict":
+        return "object"
+    base = cleaned.split(",", 1)[0].strip()
+    return _TYPE_ALIASES.get(base, base)
 
 
 def _is_type_match(value: Any, expected: str) -> bool:
+    if "|" in expected:
+        return any(_is_type_match(value, member) for member in expected.split("|"))
     expected = normalize_param_type(expected)
+    if expected == "null":
+        return value is None
     if expected == "string":
         return isinstance(value, str)
     if expected == "integer":
@@ -42,7 +54,7 @@ def _is_type_match(value: Any, expected: str) -> bool:
         return isinstance(value, list)
     if expected == "object":
         return isinstance(value, dict)
-    return True  # unknown schema types — abstain at classifier level
+    return True  # Production adapters reject unknown types before this point.
 
 
 def find_tool_schema(tools: List[ToolSchema], name: str) -> Optional[ToolSchema]:

@@ -75,3 +75,27 @@ def test_nested_arguments_can_be_deduplicated_without_hash_errors():
     cands = build_rule_candidates(rec, seed=42)
     surfaces = [candidate.serialized_call for candidate in cands]
     assert len(surfaces) == len(set(surfaces))
+
+
+def test_wrong_function_required_array_and_object_get_matching_top_level_types():
+    rec = FCRecord(
+        id="complex_distractor",
+        source="test",
+        query="q",
+        tools=[
+            ToolSchema(name="gold"),
+            ToolSchema(
+                name="other",
+                parameters={
+                    "items": ToolParameter(type="array", required=True),
+                    "filters": ToolParameter(type="object", required=True),
+                },
+            ),
+        ],
+        gold_call=FunctionCall(name="gold", arguments={}),
+    )
+    candidate = next(
+        item for item in build_rule_candidates(rec) if item.source == "wrong_function"
+    )
+    assert candidate.parsed_call is not None
+    assert candidate.parsed_call.arguments == {"items": [], "filters": {}}

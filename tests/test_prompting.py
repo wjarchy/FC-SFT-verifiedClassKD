@@ -2,7 +2,7 @@
 
 import pytest
 
-from fc_class_kd.prompting.templates import encode_sft_pair
+from fc_class_kd.prompting.templates import encode_candidate_pair, encode_sft_pair
 from fc_class_kd.types import FCRecord, FunctionCall, ToolSchema
 
 
@@ -60,3 +60,16 @@ def test_sft_encoding_rejects_gold_truncation():
     tokenizer = _FakeTokenizer()
     with pytest.raises(ValueError, match="would truncate"):
         encode_sft_pair(tokenizer, _record(), max_length=8)
+
+
+def test_candidate_encoding_preserves_arbitrary_surface_and_masks_prompt():
+    tokenizer = _FakeTokenizer(
+        prompt="PROMPT",
+        full='PROMPT<tool_call>{"name": "f", "arguments": {}}</tool_call>',
+    )
+    candidate = '{"arguments": {}, "name": "f"}'
+    input_ids, labels = encode_candidate_pair(tokenizer, _record(), candidate, max_length=128)
+    rendered = "".join(chr(token) for token in input_ids)
+    assert candidate in rendered
+    assert labels[: len(tokenizer.prompt)] == [-100] * len(tokenizer.prompt)
+    assert labels[len(tokenizer.prompt):] == input_ids[len(tokenizer.prompt):]

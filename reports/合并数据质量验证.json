@@ -1,0 +1,102 @@
+{
+  "passed": true,
+  "failures": [],
+  "warnings": [
+    "xLAM required flags are inferred conservatively from optional/default markers.",
+    "xLAM defaults are ignored for equivalence because the upstream values are noisy.",
+    "Text similarity cannot prove absence of all semantic overlap with BFCL.",
+    "Gold validity is structural; semantic correctness still requires sampled review."
+  ],
+  "processed_count": 3250,
+  "processed_sha256": "472b5b8538c5ed12edeccf784db9ee331385e3f9c0077cdeb6515d09e6977ddf",
+  "source_counts": {
+    "toolace": 2103,
+    "xlam": 1147
+  },
+  "source_shares": {
+    "toolace": 0.6470769230769231,
+    "xlam": 0.35292307692307695
+  },
+  "split_counts": {
+    "train": 2000,
+    "val": 300,
+    "internal_test": 500,
+    "diagnostic": 250,
+    "equivalence_diagnostic": 200
+  },
+  "source_by_split": {
+    "train": {
+      "toolace": 1279,
+      "xlam": 721
+    },
+    "val": {
+      "xlam": 108,
+      "toolace": 192
+    },
+    "internal_test": {
+      "toolace": 346,
+      "xlam": 154
+    },
+    "diagnostic": {
+      "toolace": 165,
+      "xlam": 85
+    },
+    "equivalence_diagnostic": {
+      "toolace": 121,
+      "xlam": 79
+    }
+  },
+  "split_overlap_counts": {
+    "train__val": 0,
+    "train__internal_test": 0,
+    "train__diagnostic": 0,
+    "train__equivalence_diagnostic": 0,
+    "val__internal_test": 0,
+    "val__diagnostic": 0,
+    "val__equivalence_diagnostic": 0,
+    "internal_test__diagnostic": 0,
+    "internal_test__equivalence_diagnostic": 0,
+    "diagnostic__equivalence_diagnostic": 0
+  },
+  "unique_id_count": 3250,
+  "unique_normalized_query_count": 3250,
+  "gold_invalid_count": 0,
+  "schema": {
+    "parameter_types": {
+      "string": 19804,
+      "number": 2891,
+      "integer": 4357,
+      "array": 791,
+      "boolean": 672,
+      "object": 34,
+      "integer|null": 16,
+      "integer|string": 5,
+      "string|null": 4,
+      "number|null": 3,
+      "number|string": 1
+    },
+    "required_counts": {
+      "required": 13326,
+      "optional": 15252
+    },
+    "default_counts": {
+      "absent": 25292,
+      "present": 3286
+    },
+    "metadata_failures": {}
+  },
+  "bfcl_excluded_normalized_queries": 101,
+  "bfcl_leakage_residual_count": 0,
+  "diagnostic_rule_candidates": {
+    "candidate_size_distribution": {
+      "5": 105,
+      "4": 29,
+      "3": 29,
+      "7": 8,
+      "6": 79
+    },
+    "with_structured_error": 250,
+    "with_two_correct_surfaces": 101
+  },
+  "manifest_hash_failures": []
+}

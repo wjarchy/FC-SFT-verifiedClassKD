@@ -1,0 +1,35 @@
+# RTX 3090 24GB — current AutoDL Fast Pilot machine
+defaults:
+  - base
+
+hardware:
+  name: rtx3090
+  fp16: false
+  bf16: true
+  micro_batch_size: 1
+  gradient_checkpointing: true
+  # Train/Validation audit maxes are 1707/1965 tokens; 2048 avoids silent dropping.
+  max_length: 2048
+
+training:
+  micro_batch_size: 1
+  gradient_checkpointing: true
+  max_length: 2048
+  epochs: 3
+  gradient_accumulation_steps: 16
+  learning_rate: 0.0002
+  weight_decay: 0.0
+  warmup_ratio: 0.03
+  max_grad_norm: 1.0
+  checkpoint_every_optimizer_steps: 25
+
+candidates:
+  K: 6
+
+models:
+  student_local: /root/autodl-tmp/models/Qwen3-1.7B
+  student_revision: 70d244cc86ccca08cf5af4e1e306ecf908b1ad5e
+  teacher_inference:
+    load_in_4bit: false
+    bf16: true
+    device_map: auto

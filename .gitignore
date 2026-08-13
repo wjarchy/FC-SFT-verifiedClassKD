@@ -26,10 +26,12 @@ data/raw/**
 !data/raw/.gitkeep
 data/processed/**
 !data/processed/.gitkeep
+!data/processed/manifest.json
 data/splits/**
 !data/splits/.gitkeep
 data/diagnostics/**
 !data/diagnostics/.gitkeep
+!data/diagnostics/Verifier人工标注表.xlsx
 data/candidates/**
 !data/candidates/.gitkeep
 !data/candidates/README.md

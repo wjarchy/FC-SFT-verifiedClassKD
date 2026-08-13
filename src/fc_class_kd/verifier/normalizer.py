@@ -3,17 +3,10 @@
 from __future__ import annotations
 
 import copy
-import re
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fc_class_kd.types import FunctionCall, ToolSchema
 from fc_class_kd.verifier.schema_checker import find_tool_schema, normalize_param_type
-
-_DATE_PATTERNS = [
-    ("%Y-%m-%d", r"^\d{4}-\d{2}-\d{2}$"),
-    ("%Y/%m/%d", r"^\d{4}/\d{2}/\d{2}$"),
-]
 
 
 def _sort_dict_keys(obj: Any) -> Any:
@@ -33,17 +26,6 @@ def _normalize_number(value: Any, param_type: str) -> Any:
     return value
 
 
-def _normalize_date_string(value: str) -> str:
-    for fmt, pattern in _DATE_PATTERNS:
-        if re.match(pattern, value):
-            try:
-                dt = datetime.strptime(value, fmt)
-                return dt.strftime("%Y-%m-%d")
-            except ValueError:
-                continue
-    return value
-
-
 def _normalize_bool_string(value: Any, param_type: str) -> Any:
     t = normalize_param_type(param_type)
     if t == "boolean" and isinstance(value, str):
@@ -53,7 +35,7 @@ def _normalize_bool_string(value: Any, param_type: str) -> Any:
     return value
 
 
-def _sort_unordered_list(value: List[Any]) -> List[Any]:
+def _sort_unordered_list(value: list[Any]) -> list[Any]:
     try:
         return sorted(value, key=lambda x: json_key(x))
     except TypeError:
@@ -79,8 +61,8 @@ def apply_schema_defaults(
 
 def canonicalize_call(
     call: FunctionCall,
-    tools: List[ToolSchema],
-    gold_call: Optional[FunctionCall] = None,
+    tools: list[ToolSchema],
+    gold_call: FunctionCall | None = None,
 ) -> FunctionCall:
     """
     Apply deterministic canonicalization. Idempotent: C(C(y)) = C(y).
@@ -90,7 +72,7 @@ def canonicalize_call(
         return FunctionCall(name=call.name, arguments=_sort_dict_keys(call.arguments))
 
     normalized = apply_schema_defaults(call, tool)
-    new_args: Dict[str, Any] = {}
+    new_args: dict[str, Any] = {}
     for key, value in normalized.arguments.items():
         if key not in tool.parameters:
             new_args[key] = _sort_dict_keys(value)
@@ -98,8 +80,9 @@ def canonicalize_call(
         spec = tool.parameters[key]
         v = _normalize_bool_string(value, spec.type)
         v = _normalize_number(v, spec.type)
-        if isinstance(v, str):
-            v = _normalize_date_string(v)
+        # Date spelling is not normalized because the current internal schema does not
+        # preserve an explicit JSON Schema date format.  A date-looking string may be an
+        # identifier; treating it as a date would create false equivalence.
         if spec.unordered and isinstance(v, list):
             v = _sort_unordered_list(v)
         if normalize_param_type(spec.type) == "object" and isinstance(v, dict):
@@ -113,7 +96,7 @@ def canonicalize_call(
 def calls_equivalent(
     candidate: FunctionCall,
     gold: FunctionCall,
-    tools: List[ToolSchema],
+    tools: list[ToolSchema],
 ) -> bool:
     c_canon = canonicalize_call(candidate, tools, gold)
     g_canon = canonicalize_call(gold, tools, gold)

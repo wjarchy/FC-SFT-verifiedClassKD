@@ -55,7 +55,10 @@ def attach_lora(
             "gate_proj", "up_proj", "down_proj",
         ]
     if hasattr(model, "is_loaded_in_4bit") and model.is_loaded_in_4bit:
-        model = prepare_model_for_kbit_training(model)
+        model = prepare_model_for_kbit_training(
+            model,
+            gradient_checkpointing_kwargs={"use_reentrant": False},
+        )
     cfg = LoraConfig(
         r=r,
         lora_alpha=lora_alpha,
@@ -64,7 +67,9 @@ def attach_lora(
         bias="none",
         task_type="CAUSAL_LM",
     )
-    return get_peft_model(model, cfg)
+    model = get_peft_model(model, cfg)
+    model.config.use_cache = False
+    return model
 
 
 def max_memory_mb() -> float:

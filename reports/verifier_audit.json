@@ -4,58 +4,26 @@
   "gold_self_check_rate": 1.0,
   "gold_total": 200,
   "class_counts": {
-    "correct": 200,
-    "wrong_arguments": 214,
+    "correct": 269,
+    "wrong_function": 200,
     "invalid": 200,
-    "wrong_function": 145
+    "wrong_arguments": 334
   },
   "automated_sanity_passed": true,
   "prd_manual_gate_passed": null,
   "samples": [
     {
-      "id": "toolace_1914",
-      "candidate_name": "Get Daily Forex Data",
+      "id": "toolace_4900",
+      "candidate_source": "gold",
+      "serialized_call": "{\"name\": \"getUrbanEcologyIndex\", \"arguments\": {}}",
       "class": "correct",
       "sub": null,
       "details": []
     },
     {
-      "id": "toolace_1914",
-      "candidate_name": "Get Funding Rate History",
-      "class": "wrong_arguments",
-      "sub": "wrong_type",
-      "details": [
-        "wrong_type:end,start"
-      ]
-    },
-    {
-      "id": "toolace_1914",
-      "candidate_name": "Get Daily Forex Data",
-      "class": "wrong_arguments",
-      "sub": "wrong_key",
-      "details": [
-        "unknown_keys:__wrong_key__"
-      ]
-    },
-    {
-      "id": "toolace_1914",
-      "candidate_name": "",
-      "class": "invalid",
-      "sub": "parse_error",
-      "details": [
-        "missing_or_invalid_name"
-      ]
-    },
-    {
-      "id": "toolace_6322",
-      "candidate_name": "Get Vessels by Ship Name",
-      "class": "correct",
-      "sub": null,
-      "details": []
-    },
-    {
-      "id": "toolace_6322",
-      "candidate_name": "QueryKeywords",
+      "id": "toolace_4900",
+      "candidate_source": "wrong_function",
+      "serialized_call": "{\"name\": \"getUrbanAirQualityIndex\", \"arguments\": {\"city\": \"placeholder\"}}",
       "class": "wrong_function",
       "sub": null,
       "details": [
@@ -63,33 +31,27 @@
       ]
     },
     {
-      "id": "toolace_6322",
-      "candidate_name": "Get Vessels by Ship Name",
-      "class": "wrong_arguments",
-      "sub": "wrong_key",
-      "details": [
-        "unknown_keys:__wrong_key__"
-      ]
-    },
-    {
-      "id": "toolace_6322",
-      "candidate_name": "",
+      "id": "toolace_4900",
+      "candidate_source": "invalid_json",
+      "serialized_call": "{\"name\":",
       "class": "invalid",
       "sub": "parse_error",
       "details": [
-        "missing_or_invalid_name"
+        "json_parse_failed"
       ]
     },
     {
-      "id": "toolace_6065",
-      "candidate_name": "getMostRecentCovid19Statistics",
+      "id": "toolace_8517",
+      "candidate_source": "gold",
+      "serialized_call": "{\"name\": \"forex_list\", \"arguments\": {}}",
       "class": "correct",
       "sub": null,
       "details": []
     },
     {
-      "id": "toolace_6065",
-      "candidate_name": "Get Top NFT Collections",
+      "id": "toolace_8517",
+      "candidate_source": "wrong_function",
+      "serialized_call": "{\"name\": \"GetMarkets\", \"arguments\": {}}",
       "class": "wrong_function",
       "sub": null,
       "details": [
@@ -97,58 +59,27 @@
       ]
     },
     {
-      "id": "toolace_6065",
-      "candidate_name": "getMostRecentCovid19Statistics",
-      "class": "wrong_arguments",
-      "sub": "wrong_key",
-      "details": [
-        "unknown_keys:__wrong_key__"
-      ]
-    },
-    {
-      "id": "toolace_6065",
-      "candidate_name": "",
+      "id": "toolace_8517",
+      "candidate_source": "invalid_json",
+      "serialized_call": "{\"name\":",
       "class": "invalid",
       "sub": "parse_error",
       "details": [
-        "missing_or_invalid_name"
+        "json_parse_failed"
       ]
     },
     {
-      "id": "toolace_10253",
-      "candidate_name": "getUavStatus",
+      "id": "toolace_7667",
+      "candidate_source": "gold",
+      "serialized_call": "{\"name\": \"BSC News API\", \"arguments\": {\"category\": \"cryptocurrency\"}}",
       "class": "correct",
       "sub": null,
       "details": []
     },
     {
-      "id": "toolace_10253",
-      "candidate_name": "sendUavCommand",
-      "class": "wrong_arguments",
-      "sub": "wrong_type",
-      "details": [
-        "wrong_type:uav_id"
-      ]
-    },
-    {
-      "id": "toolace_10253",
-      "candidate_name": "",
-      "class": "invalid",
-      "sub": "parse_error",
-      "details": [
-        "missing_or_invalid_name"
-      ]
-    },
-    {
-      "id": "toolace_10521",
-      "candidate_name": "Get Address Monitor Quota Usage",
-      "class": "correct",
-      "sub": null,
-      "details": []
-    },
-    {
-      "id": "toolace_10521",
-      "candidate_name": "Retrieve All Queue Times",
+      "id": "toolace_7667",
+      "candidate_source": "wrong_function",
+      "serialized_call": "{\"name\": \"List Files Under Project\", \"arguments\": {\"project_uuid\": \"placeholder\"}}",
       "class": "wrong_function",
       "sub": null,
       "details": [
@@ -156,24 +87,56 @@
       ]
     },
     {
-      "id": "toolace_10521",
-      "candidate_name": "",
-      "class": "invalid",
-      "sub": "parse_error",
+      "id": "toolace_7667",
+      "candidate_source": "missing_required",
+      "serialized_call": "{\"name\": \"BSC News API\", \"arguments\": {}}",
+      "class": "wrong_arguments",
+      "sub": "missing_required",
       "details": [
-        "missing_or_invalid_name"
+        "missing_required:category"
       ]
     },
     {
-      "id": "toolace_1134",
-      "candidate_name": "GetIpInfoLite",
+      "id": "toolace_7667",
+      "candidate_source": "wrong_key",
+      "serialized_call": "{\"name\": \"BSC News API\", \"arguments\": {\"__wrong_key__\": \"cryptocurrency\"}}",
+      "class": "wrong_arguments",
+      "sub": "missing_required",
+      "details": [
+        "missing_required:category",
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_7667",
+      "candidate_source": "invalid_json",
+      "serialized_call": "{\"name\":",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "json_parse_failed"
+      ]
+    },
+    {
+      "id": "toolace_8394",
+      "candidate_source": "gold",
+      "serialized_call": "{\"name\": \"createBlockchain\", \"arguments\": {\"name\": \"ProjectAlpha\", \"version\": \"1.0\", \"consensus\": \"Proof of Work\"}}",
       "class": "correct",
       "sub": null,
       "details": []
     },
     {
-      "id": "toolace_1134",
-      "candidate_name": "State API",
+      "id": "toolace_8394",
+      "candidate_source": "strict_equivalent_key_reorder",
+      "serialized_call": "{\"name\": \"createBlockchain\", \"arguments\": {\"consensus\": \"Proof of Work\", \"name\": \"ProjectAlpha\", \"version\": \"1.0\"}}",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_8394",
+      "candidate_source": "wrong_function",
+      "serialized_call": "{\"name\": \"getAccountBalance\", \"arguments\": {\"account_id\": \"placeholder\", \"blockchain_id\": \"placeholder\"}}",
       "class": "wrong_function",
       "sub": null,
       "details": [
@@ -181,33 +144,48 @@
       ]
     },
     {
-      "id": "toolace_1134",
-      "candidate_name": "GetIpInfoLite",
+      "id": "toolace_8394",
+      "candidate_source": "missing_required",
+      "serialized_call": "{\"name\": \"createBlockchain\", \"arguments\": {\"version\": \"1.0\", \"consensus\": \"Proof of Work\"}}",
       "class": "wrong_arguments",
-      "sub": "wrong_key",
+      "sub": "missing_required",
       "details": [
+        "missing_required:name"
+      ]
+    },
+    {
+      "id": "toolace_8394",
+      "candidate_source": "wrong_key",
+      "serialized_call": "{\"name\": \"createBlockchain\", \"arguments\": {\"version\": \"1.0\", \"consensus\": \"Proof of Work\", \"__wrong_key__\": \"ProjectAlpha\"}}",
+      "class": "wrong_arguments",
+      "sub": "missing_required",
+      "details": [
+        "missing_required:name",
         "unknown_keys:__wrong_key__"
       ]
     },
     {
-      "id": "toolace_1134",
-      "candidate_name": "",
+      "id": "toolace_8394",
+      "candidate_source": "invalid_json",
+      "serialized_call": "{\"name\":",
       "class": "invalid",
       "sub": "parse_error",
       "details": [
-        "missing_or_invalid_name"
+        "json_parse_failed"
       ]
     },
     {
-      "id": "toolace_6503",
-      "candidate_name": "Geo Search API",
+      "id": "toolace_8048",
+      "candidate_source": "gold",
+      "serialized_call": "{\"name\": \"Get Conversions Count\", \"arguments\": {}}",
       "class": "correct",
       "sub": null,
       "details": []
     },
     {
-      "id": "toolace_6503",
-      "candidate_name": "Region List",
+      "id": "toolace_8048",
+      "candidate_source": "wrong_function",
+      "serialized_call": "{\"name\": \"GetPdfInStorageToSvg\", \"arguments\": {\"name\": \"placeholder\", \"compressOutputToZipArchive\": true}}",
       "class": "wrong_function",
       "sub": null,
       "details": [
@@ -215,33 +193,27 @@
       ]
     },
     {
-      "id": "toolace_6503",
-      "candidate_name": "Geo Search API",
-      "class": "wrong_arguments",
-      "sub": "wrong_key",
-      "details": [
-        "unknown_keys:__wrong_key__"
-      ]
-    },
-    {
-      "id": "toolace_6503",
-      "candidate_name": "",
+      "id": "toolace_8048",
+      "candidate_source": "invalid_json",
+      "serialized_call": "{\"name\":",
       "class": "invalid",
       "sub": "parse_error",
       "details": [
-        "missing_or_invalid_name"
+        "json_parse_failed"
       ]
     },
     {
-      "id": "toolace_5206",
-      "candidate_name": "Address Validation API",
+      "id": "toolace_1806",
+      "candidate_source": "gold",
+      "serialized_call": "{\"name\": \"WNBA Teams API\", \"arguments\": {}}",
       "class": "correct",
       "sub": null,
       "details": []
     },
     {
-      "id": "toolace_5206",
-      "candidate_name": "get_screener_filters",
+      "id": "toolace_1806",
+      "candidate_source": "wrong_function",
+      "serialized_call": "{\"name\": \"Get Football Match Graph\", \"arguments\": {\"id\": 1.0}}",
       "class": "wrong_function",
       "sub": null,
       "details": [
@@ -249,67 +221,27 @@
       ]
     },
     {
-      "id": "toolace_5206",
-      "candidate_name": "Address Validation API",
-      "class": "wrong_arguments",
-      "sub": "wrong_key",
-      "details": [
-        "unknown_keys:__wrong_key__"
-      ]
-    },
-    {
-      "id": "toolace_5206",
-      "candidate_name": "",
+      "id": "toolace_1806",
+      "candidate_source": "invalid_json",
+      "serialized_call": "{\"name\":",
       "class": "invalid",
       "sub": "parse_error",
       "details": [
-        "missing_or_invalid_name"
+        "json_parse_failed"
       ]
     },
     {
-      "id": "toolace_7480",
-      "candidate_name": "Get Cricket Match Results By Date",
+      "id": "toolace_10347",
+      "candidate_source": "gold",
+      "serialized_call": "{\"name\": \"Blake2B Text Hash\", \"arguments\": {\"dataString\": \"SecureData\"}}",
       "class": "correct",
       "sub": null,
       "details": []
     },
     {
-      "id": "toolace_7480",
-      "candidate_name": "Get Prematch List",
-      "class": "wrong_arguments",
-      "sub": "wrong_type",
-      "details": [
-        "wrong_type:lid,sp"
-      ]
-    },
-    {
-      "id": "toolace_7480",
-      "candidate_name": "Get Cricket Match Results By Date",
-      "class": "wrong_arguments",
-      "sub": "wrong_key",
-      "details": [
-        "unknown_keys:__wrong_key__"
-      ]
-    },
-    {
-      "id": "toolace_7480",
-      "candidate_name": "",
-      "class": "invalid",
-      "sub": "parse_error",
-      "details": [
-        "missing_or_invalid_name"
-      ]
-    },
-    {
-      "id": "toolace_10046",
-      "candidate_name": "Get Latest EuroMillions Results",
-      "class": "correct",
-      "sub": null,
-      "details": []
-    },
-    {
-      "id": "toolace_10046",
-      "candidate_name": "Elhighlights API",
+      "id": "toolace_10347",
+      "candidate_source": "wrong_function",
+      "serialized_call": "{\"name\": \"Get Regions\", \"arguments\": {\"continent\": \"placeholder\", \"country\": \"placeholder\"}}",
       "class": "wrong_function",
       "sub": null,
       "details": [
@@ -317,33 +249,48 @@
       ]
     },
     {
-      "id": "toolace_10046",
-      "candidate_name": "Get Latest EuroMillions Results",
+      "id": "toolace_10347",
+      "candidate_source": "missing_required",
+      "serialized_call": "{\"name\": \"Blake2B Text Hash\", \"arguments\": {}}",
       "class": "wrong_arguments",
-      "sub": "wrong_key",
+      "sub": "missing_required",
       "details": [
+        "missing_required:dataString"
+      ]
+    },
+    {
+      "id": "toolace_10347",
+      "candidate_source": "wrong_key",
+      "serialized_call": "{\"name\": \"Blake2B Text Hash\", \"arguments\": {\"__wrong_key__\": \"SecureData\"}}",
+      "class": "wrong_arguments",
+      "sub": "missing_required",
+      "details": [
+        "missing_required:dataString",
         "unknown_keys:__wrong_key__"
       ]
     },
     {
-      "id": "toolace_10046",
-      "candidate_name": "",
+      "id": "toolace_10347",
+      "candidate_source": "invalid_json",
+      "serialized_call": "{\"name\":",
       "class": "invalid",
       "sub": "parse_error",
       "details": [
-        "missing_or_invalid_name"
+        "json_parse_failed"
       ]
     },
     {
-      "id": "toolace_4385",
-      "candidate_name": "Get Plant Information",
+      "id": "toolace_2370",
+      "candidate_source": "gold",
+      "serialized_call": "{\"name\": \"GET Top Gainers Losers List\", \"arguments\": {}}",
       "class": "correct",
       "sub": null,
       "details": []
     },
     {
-      "id": "toolace_4385",
-      "candidate_name": "Crimes at Location",
+      "id": "toolace_2370",
+      "candidate_source": "wrong_function",
+      "serialized_call": "{\"name\": \"Three Black Crows\", \"arguments\": {\"page\": 1}}",
       "class": "wrong_function",
       "sub": null,
       "details": [
@@ -351,33 +298,27 @@
       ]
     },
     {
-      "id": "toolace_4385",
-      "candidate_name": "Get Plant Information",
-      "class": "wrong_arguments",
-      "sub": "wrong_key",
-      "details": [
-        "unknown_keys:__wrong_key__"
-      ]
-    },
-    {
-      "id": "toolace_4385",
-      "candidate_name": "",
+      "id": "toolace_2370",
+      "candidate_source": "invalid_json",
+      "serialized_call": "{\"name\":",
       "class": "invalid",
       "sub": "parse_error",
       "details": [
-        "missing_or_invalid_name"
+        "json_parse_failed"
       ]
     },
     {
-      "id": "toolace_9261",
-      "candidate_name": "NFT Collection Information",
+      "id": "toolace_859",
+      "candidate_source": "gold",
+      "serialized_call": "{\"name\": \"Get All Partners\", \"arguments\": {}}",
       "class": "correct",
       "sub": null,
       "details": []
     },
     {
-      "id": "toolace_9261",
-      "candidate_name": "IP Address to Income",
+      "id": "toolace_859",
+      "candidate_source": "wrong_function",
+      "serialized_call": "{\"name\": \"findstate\", \"arguments\": {\"pincode\": \"placeholder\"}}",
       "class": "wrong_function",
       "sub": null,
       "details": [
@@ -385,33 +326,27 @@
       ]
     },
     {
-      "id": "toolace_9261",
-      "candidate_name": "NFT Collection Information",
-      "class": "wrong_arguments",
-      "sub": "wrong_key",
-      "details": [
-        "unknown_keys:__wrong_key__"
-      ]
-    },
-    {
-      "id": "toolace_9261",
-      "candidate_name": "",
+      "id": "toolace_859",
+      "candidate_source": "invalid_json",
+      "serialized_call": "{\"name\":",
       "class": "invalid",
       "sub": "parse_error",
       "details": [
-        "missing_or_invalid_name"
+        "json_parse_failed"
       ]
     },
     {
-      "id": "toolace_6062",
-      "candidate_name": "getFertilizerRecommendation",
+      "id": "toolace_3201",
+      "candidate_source": "gold",
+      "serialized_call": "{\"name\": \"Get Postal Information\", \"arguments\": {\"get\": \"shipping rate\"}}",
       "class": "correct",
       "sub": null,
       "details": []
     },
     {
-      "id": "toolace_6062",
-      "candidate_name": "irrigateCrop",
+      "id": "toolace_3201",
+      "candidate_source": "wrong_function",
+      "serialized_call": "{\"name\": \"List Sigma Sources\", \"arguments\": {}}",
       "class": "wrong_function",
       "sub": null,
       "details": [
@@ -419,21 +354,140 @@
       ]
     },
     {
-      "id": "toolace_6062",
-      "candidate_name": "getFertilizerRecommendation",
+      "id": "toolace_3201",
+      "candidate_source": "missing_required",
+      "serialized_call": "{\"name\": \"Get Postal Information\", \"arguments\": {}}",
       "class": "wrong_arguments",
-      "sub": "wrong_key",
+      "sub": "missing_required",
       "details": [
+        "missing_required:get"
+      ]
+    },
+    {
+      "id": "toolace_3201",
+      "candidate_source": "wrong_key",
+      "serialized_call": "{\"name\": \"Get Postal Information\", \"arguments\": {\"__wrong_key__\": \"shipping rate\"}}",
+      "class": "wrong_arguments",
+      "sub": "missing_required",
+      "details": [
+        "missing_required:get",
         "unknown_keys:__wrong_key__"
       ]
     },
     {
-      "id": "toolace_6062",
-      "candidate_name": "",
+      "id": "toolace_3201",
+      "candidate_source": "invalid_json",
+      "serialized_call": "{\"name\":",
       "class": "invalid",
       "sub": "parse_error",
       "details": [
-        "missing_or_invalid_name"
+        "json_parse_failed"
+      ]
+    },
+    {
+      "id": "toolace_5514",
+      "candidate_source": "gold",
+      "serialized_call": "{\"name\": \"getProjectSchedule\", \"arguments\": {\"project_id\": \"DB2345\"}}",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_5514",
+      "candidate_source": "wrong_function",
+      "serialized_call": "{\"name\": \"getConstructionScheduling\", \"arguments\": {\"project_name\": \"placeholder\"}}",
+      "class": "wrong_function",
+      "sub": null,
+      "details": [
+        "function_name_mismatch"
+      ]
+    },
+    {
+      "id": "toolace_5514",
+      "candidate_source": "missing_required",
+      "serialized_call": "{\"name\": \"getProjectSchedule\", \"arguments\": {}}",
+      "class": "wrong_arguments",
+      "sub": "missing_required",
+      "details": [
+        "missing_required:project_id"
+      ]
+    },
+    {
+      "id": "toolace_5514",
+      "candidate_source": "wrong_key",
+      "serialized_call": "{\"name\": \"getProjectSchedule\", \"arguments\": {\"__wrong_key__\": \"DB2345\"}}",
+      "class": "wrong_arguments",
+      "sub": "missing_required",
+      "details": [
+        "missing_required:project_id",
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_5514",
+      "candidate_source": "invalid_json",
+      "serialized_call": "{\"name\":",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "json_parse_failed"
+      ]
+    },
+    {
+      "id": "toolace_7972",
+      "candidate_source": "gold",
+      "serialized_call": "{\"name\": \"getPortfolioValue\", \"arguments\": {\"account_id\": \"12345678\", \"currency\": \"EUR\"}}",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_7972",
+      "candidate_source": "strict_equivalent_key_reorder",
+      "serialized_call": "{\"name\": \"getPortfolioValue\", \"arguments\": {\"currency\": \"EUR\", \"account_id\": \"12345678\"}}",
+      "class": "correct",
+      "sub": null,
+      "details": []
+    },
+    {
+      "id": "toolace_7972",
+      "candidate_source": "wrong_function",
+      "serialized_call": "{\"name\": \"getCurrencyExchangeRate\", \"arguments\": {\"base_currency\": \"placeholder\", \"target_currency\": \"placeholder\"}}",
+      "class": "wrong_function",
+      "sub": null,
+      "details": [
+        "function_name_mismatch"
+      ]
+    },
+    {
+      "id": "toolace_7972",
+      "candidate_source": "missing_required",
+      "serialized_call": "{\"name\": \"getPortfolioValue\", \"arguments\": {\"currency\": \"EUR\"}}",
+      "class": "wrong_arguments",
+      "sub": "missing_required",
+      "details": [
+        "missing_required:account_id"
+      ]
+    },
+    {
+      "id": "toolace_7972",
+      "candidate_source": "wrong_key",
+      "serialized_call": "{\"name\": \"getPortfolioValue\", \"arguments\": {\"currency\": \"EUR\", \"__wrong_key__\": \"12345678\"}}",
+      "class": "wrong_arguments",
+      "sub": "missing_required",
+      "details": [
+        "missing_required:account_id",
+        "unknown_keys:__wrong_key__"
+      ]
+    },
+    {
+      "id": "toolace_7972",
+      "candidate_source": "invalid_json",
+      "serialized_call": "{\"name\":",
+      "class": "invalid",
+      "sub": "parse_error",
+      "details": [
+        "json_parse_failed"
       ]
     }
   ]

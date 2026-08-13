@@ -59,6 +59,21 @@ class CandidateRecord(BaseModel):
     parsed_call: Optional[FunctionCall] = None
 
 
+class LabeledCandidate(CandidateRecord):
+    """One frozen-pool candidate together with its deterministic verifier label."""
+
+    candidate_id: str
+    verifier: VerifierResult
+
+
+class CandidatePoolRecord(BaseModel):
+    """Exactly one candidate pool for one source example."""
+
+    sample_id: str
+    split: str
+    candidates: List[LabeledCandidate]
+
+
 class FCRecord(BaseModel):
     """Unified internal record after adapter + filter."""
 

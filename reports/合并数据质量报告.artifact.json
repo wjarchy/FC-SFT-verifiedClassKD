@@ -1,0 +1,280 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "ToolACE 与 xLAM 合并数据质量报告",
+    "description": "面向实验实施者的数据来源、筛选、隔离和结构质量审计。",
+    "generatedAt": "2026-08-12T08:30:00Z",
+    "cards": [
+      {
+        "id": "formal_total",
+        "description": "进入五个固定划分的正式记录总数。",
+        "dataset": "headline_metrics",
+        "sourceId": "headline_query",
+        "metrics": [
+          {"label": "正式数据", "field": "formal_total", "format": "number"}
+        ]
+      },
+      {
+        "id": "gold_valid_rate",
+        "description": "Gold 在当前工具参数说明下通过结构验证的比例。",
+        "dataset": "headline_metrics",
+        "sourceId": "headline_query",
+        "metrics": [
+          {"label": "Gold 结构通过率", "field": "gold_valid_rate", "format": "percent"}
+        ]
+      },
+      {
+        "id": "split_overlap",
+        "description": "五个固定划分之间发现的记录交集数。",
+        "dataset": "headline_metrics",
+        "sourceId": "headline_query",
+        "metrics": [
+          {"label": "划分交集", "field": "split_overlap", "format": "number"}
+        ]
+      },
+      {
+        "id": "bfcl_residual",
+        "description": "正式数据中残留的 BFCL 高相似剔除项。",
+        "dataset": "headline_metrics",
+        "sourceId": "headline_query",
+        "metrics": [
+          {"label": "BFCL 残留", "field": "bfcl_residual", "format": "number"}
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "xlam_filter_funnel",
+        "title": "xLAM 数据筛选过程",
+        "subtitle": "从 60,000 条原始记录到 17,924 个去重、去 BFCL 泄漏的可用问题",
+        "intent": "funnel",
+        "question": "xLAM 原始数据经过单调用、结构和泄漏检查后还剩多少？",
+        "rationale": "阶段有明确先后关系，漏斗图用于呈现每一步的保留规模。",
+        "type": "funnel",
+        "dataset": "xlam_filter_stages",
+        "sourceId": "xlam_pipeline_query",
+        "encodings": {
+          "x": {"field": "stage", "type": "ordinal", "label": "筛选阶段"},
+          "y": {"field": "count", "type": "quantitative", "label": "记录数", "format": "number"},
+          "tooltip": [
+            {"field": "retention", "type": "quantitative", "label": "相对原始保留率", "format": "percent"},
+            {"field": "note", "type": "text", "label": "说明"}
+          ]
+        },
+        "valueFormat": "number",
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "source_composition",
+        "title": "正式数据来源组成",
+        "subtitle": "全部 ToolACE 加上按 seed=42 抽取的 xLAM 补足数据",
+        "dataset": "source_composition",
+        "sourceId": "manifest_query",
+        "columns": [
+          {"field": "source", "label": "来源", "type": "text"},
+          {"field": "count", "label": "数量", "format": "number"},
+          {"field": "share", "label": "占比", "format": "percent"},
+          {"field": "policy", "label": "选择方式", "type": "text"}
+        ],
+        "layout": "full"
+      },
+      {
+        "id": "split_composition",
+        "title": "固定划分与来源分布",
+        "subtitle": "每条记录只进入一个划分",
+        "dataset": "split_composition",
+        "sourceId": "split_query",
+        "columns": [
+          {"field": "split", "label": "划分", "type": "text"},
+          {"field": "total", "label": "总数", "format": "number"},
+          {"field": "toolace", "label": "ToolACE", "format": "number"},
+          {"field": "xlam", "label": "xLAM", "format": "number"},
+          {"field": "use", "label": "用途", "type": "text"}
+        ],
+        "layout": "full"
+      },
+      {
+        "id": "quality_issues",
+        "title": "发现的问题与处理结果",
+        "subtitle": "结构风险、修复方式和仍需保留的限制",
+        "dataset": "quality_issues",
+        "sourceId": "quality_query",
+        "columns": [
+          {"field": "issue", "label": "问题", "type": "text"},
+          {"field": "evidence", "label": "证据", "type": "text"},
+          {"field": "treatment", "label": "处理", "type": "text"},
+          {"field": "status", "label": "当前判断", "type": "text"}
+        ],
+        "layout": "full"
+      }
+    ],
+    "sources": [
+      {"id": "headline_query", "label": "正式数据主要指标", "path": "reports/合并数据质量验证.json"},
+      {"id": "manifest_query", "label": "正式数据来源组成", "path": "data/processed/manifest.json"},
+      {"id": "split_query", "label": "固定划分来源分布", "path": "reports/合并数据质量验证.json"},
+      {"id": "xlam_pipeline_query", "label": "xLAM 筛选阶段", "path": "reports/xLAM数据审计.json"},
+      {"id": "quality_query", "label": "合并数据问题审计", "path": "reports/合并数据质量验证.json"}
+    ],
+    "blocks": [
+      {
+        "id": "technical_conclusion",
+        "type": "markdown",
+        "body": "## 技术结论\n\n正式数据已通过当前自动检查，可以进入公共 S0 训练。这里的“通过”表示结构和隔离条件满足，不代表所有问题的自然语言语义已经逐条人工确认。"
+      },
+      {
+        "id": "headline",
+        "type": "metric-strip",
+        "cardIds": ["formal_total", "gold_valid_rate", "split_overlap", "bfcl_residual"]
+      },
+      {
+        "id": "composition_intro",
+        "type": "markdown",
+        "body": "## 正式数据组成\n\n保留全部 2,103 条已恢复原始参数说明的 ToolACE，再从可用 xLAM 中固定抽取 1,147 条，得到 3,250 条正式数据。",
+        "sourceId": "manifest_query"
+      },
+      {"id": "source_table", "type": "table", "tableId": "source_composition"},
+      {"id": "xlam_funnel", "type": "chart", "chartId": "xlam_filter_funnel"},
+      {
+        "id": "split_intro",
+        "type": "markdown",
+        "body": "## 固定划分\n\nTrain、Validation、Internal Test、Diagnostic 和 Equiv Diagnostic 两两无交集；ID 与规范化问题文本也全部唯一。",
+        "sourceId": "split_query"
+      },
+      {"id": "split_table", "type": "table", "tableId": "split_composition"},
+      {
+        "id": "quality_intro",
+        "type": "markdown",
+        "body": "## 主要数据问题\n\n审计不仅检查最终是否通过，也保留每项问题的证据、处理策略和残余不确定性。"
+      },
+      {"id": "quality_table", "type": "table", "tableId": "quality_issues"},
+      {
+        "id": "method",
+        "type": "markdown",
+        "body": "## 检查范围与方法\n\n1. 固定数据集版本和正式文件哈希。\n2. 重新验证每条 Gold 的函数名、参数名、必填项和参数类型。\n3. 检查 ID、规范化问题文本及五个划分之间的交集。\n4. 用固定 BFCL v4 数据做完全相同和高表面相似检查，并从 xLAM 候选中整体剔除命中问题。\n5. 复算来源数量、参数说明统计和候选池初检指标。"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## 限制\n\n- xLAM 没有上游显式 `required`，本项目只能根据 `optional` 和默认字段保守推断。\n- xLAM 默认值噪声较大，因此全部不参与等价判断；这会减少假等价，也可能漏掉真实默认值等价。\n- 文本相似度无法证明不存在所有语义泄漏。\n- Gold 结构合法不等于用户语义一定正确，后续仍需抽样人工审核。\n- 最终验证器人工准确率要等 S0 真实错误加入严格 K=6 候选池后再审核。"
+      },
+      {
+        "id": "recommendation",
+        "type": "markdown",
+        "body": "## 建议与下一步\n\n当前数据满足公共 S0 的进入条件。下一步应先完成正式 SFT 入口和短程 smoke/overfit，再训练 Qwen3-1.7B 公共 S0；不要把当前规则候选池当作最终 K=6 候选池。"
+      },
+      {
+        "id": "open_questions",
+        "type": "markdown",
+        "body": "## 后续需要回答的问题\n\n- S0 与 8B Teacher 在 Diagnostic 上是否存在足够且稳定的能力差距？\n- 最终 K=6 候选池中，验证器经人工抽检后的准确率是多少？\n- Class KD 的收益是否来自等价类监督，而不是额外训练步数或候选数量？"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-12T08:30:00Z",
+    "status": "ready",
+    "datasets": {
+      "headline_metrics": [
+        {"formal_total": 3250, "gold_valid_rate": 1.0, "split_overlap": 0, "bfcl_residual": 0}
+      ],
+      "xlam_filter_stages": [
+        {"stage": "原始记录", "count": 60000, "retention": 1.0, "note": "xLAM 固定版本全部记录"},
+        {"stage": "单调用答案", "count": 28461, "retention": 0.47435, "note": "答案中只有一次函数调用"},
+        {"stage": "参数说明可安全解析", "count": 20104, "retention": 0.3350666667, "note": "支持的类型且 Gold 结构合法"},
+        {"stage": "通过快速筛选", "count": 19642, "retention": 0.3273666667, "note": "满足项目快速试验过滤条件"},
+        {"stage": "去重并剔除 BFCL 相似项", "count": 17924, "retention": 0.2987333333, "note": "正式抽样前的可用问题池"}
+      ],
+      "source_composition": [
+        {"source": "ToolACE", "count": 2103, "share": 0.6470769231, "policy": "恢复原始参数说明后全部保留"},
+        {"source": "xLAM", "count": 1147, "share": 0.3529230769, "policy": "从 17,924 个可用问题中按 seed=42 补足"}
+      ],
+      "split_composition": [
+        {"split": "Train", "total": 2000, "toolace": 1279, "xlam": 721, "use": "公共 S0 与后续训练分支"},
+        {"split": "Validation", "total": 300, "toolace": 192, "xlam": 108, "use": "选择训练轮次"},
+        {"split": "Internal Test", "total": 500, "toolace": 346, "xlam": 154, "use": "最终内部评测"},
+        {"split": "Diagnostic", "total": 250, "toolace": 165, "xlam": 85, "use": "Teacher 与 S0 的实验前诊断"},
+        {"split": "Equiv Diagnostic", "total": 200, "toolace": 121, "xlam": 79, "use": "最终等价性评测"}
+      ],
+      "quality_issues": [
+        {"issue": "xLAM 缺少显式 required", "evidence": "362,482 个参数全部缺失", "treatment": "按 optional 和默认字段保守推断", "status": "可用，但保留中等不确定性"},
+        {"issue": "xLAM 默认值类型混乱", "evidence": "64,099 个空字符串，另有类型不匹配", "treatment": "默认值全部不参与等价判断", "status": "假默认值等价风险已消除"},
+        {"issue": "xLAM 复合类型格式多样", "evidence": "包含 List、Tuple、set、Dict、Callable", "treatment": "映射支持类型；Callable 整条剔除", "status": "已处理"},
+        {"issue": "ToolACE 原始联合类型", "evidence": "29 个参数使用类型列表", "treatment": "保存为 integer|null 等并逐成员检查", "status": "已处理"},
+        {"issue": "规范化问题重复", "evidence": "暂存版已发现标点和空白变体", "treatment": "按规范化问题文本去重后再划分", "status": "正式残留 0"},
+        {"issue": "xLAM 与 BFCL 高相似", "evidence": "102 个高相似问题，涉及 155 个原始行", "treatment": "按规范化问题文本整体剔除", "status": "正式残留 0"}
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "headline_query",
+      "label": "正式数据主要指标",
+      "path": "reports/合并数据质量验证.json",
+      "query": {
+        "engine": "SQLite",
+        "language": "SQL",
+        "sql": "WITH d AS (SELECT json(readfile('reports/合并数据质量验证.json')) AS j) SELECT json_extract(j, '$.processed_count') AS formal_total, 1.0 - 1.0 * json_extract(j, '$.gold_invalid_count') / json_extract(j, '$.processed_count') AS gold_valid_rate, (SELECT COALESCE(SUM(CAST(value AS INTEGER)), 0) FROM d, json_each(j, '$.split_overlap_counts')) AS split_overlap, json_extract(j, '$.bfcl_leakage_residual_count') AS bfcl_residual FROM d;",
+        "description": "从正式验证结果复算数据总数、Gold 结构通过率、划分交集和 BFCL 残留。",
+        "executed_at": "2026-08-12T08:30:00Z",
+        "tables_used": ["reports/合并数据质量验证.json"],
+        "metric_definitions": ["Gold 结构通过率 = 1 - Gold 结构错误数 / 正式数据总数", "划分交集 = 十组两两划分交集数之和"]
+      }
+    },
+    {
+      "id": "manifest_query",
+      "label": "正式数据来源组成",
+      "path": "data/processed/manifest.json",
+      "query": {
+        "engine": "SQLite",
+        "language": "SQL",
+        "sql": "WITH d AS (SELECT json(readfile('data/processed/manifest.json')) AS j), total AS (SELECT json_extract(j, '$.counts.processed_deduplicated') AS n FROM d) SELECT 'ToolACE' AS source, json_extract(j, '$.counts.processed_by_source.toolace') AS count, 1.0 * json_extract(j, '$.counts.processed_by_source.toolace') / n AS share FROM d, total UNION ALL SELECT 'xLAM', json_extract(j, '$.counts.processed_by_source.xlam'), 1.0 * json_extract(j, '$.counts.processed_by_source.xlam') / n FROM d, total;",
+        "description": "从正式数据清单复算两项来源的数量与占比。",
+        "executed_at": "2026-08-12T08:30:00Z",
+        "tables_used": ["data/processed/manifest.json"]
+      }
+    },
+    {
+      "id": "split_query",
+      "label": "固定划分来源分布",
+      "path": "reports/合并数据质量验证.json",
+      "query": {
+        "engine": "SQLite",
+        "language": "SQL",
+        "sql": "WITH d AS (SELECT json(readfile('reports/合并数据质量验证.json')) AS j) SELECT 'Train' AS split, json_extract(j, '$.split_counts.train') AS total, json_extract(j, '$.source_by_split.train.toolace') AS toolace, json_extract(j, '$.source_by_split.train.xlam') AS xlam FROM d UNION ALL SELECT 'Validation', json_extract(j, '$.split_counts.val'), json_extract(j, '$.source_by_split.val.toolace'), json_extract(j, '$.source_by_split.val.xlam') FROM d UNION ALL SELECT 'Internal Test', json_extract(j, '$.split_counts.internal_test'), json_extract(j, '$.source_by_split.internal_test.toolace'), json_extract(j, '$.source_by_split.internal_test.xlam') FROM d UNION ALL SELECT 'Diagnostic', json_extract(j, '$.split_counts.diagnostic'), json_extract(j, '$.source_by_split.diagnostic.toolace'), json_extract(j, '$.source_by_split.diagnostic.xlam') FROM d UNION ALL SELECT 'Equiv Diagnostic', json_extract(j, '$.split_counts.equivalence_diagnostic'), json_extract(j, '$.source_by_split.equivalence_diagnostic.toolace'), json_extract(j, '$.source_by_split.equivalence_diagnostic.xlam') FROM d;",
+        "description": "从正式验证结果复算五个固定划分的总数和来源数量。",
+        "executed_at": "2026-08-12T08:30:00Z",
+        "tables_used": ["reports/合并数据质量验证.json"]
+      }
+    },
+    {
+      "id": "xlam_pipeline_query",
+      "label": "xLAM 筛选阶段",
+      "path": "reports/xLAM数据审计.json",
+      "query": {
+        "engine": "SQLite",
+        "language": "SQL",
+        "sql": "WITH x AS (SELECT json(readfile('reports/xLAM数据审计.json')) AS j), m AS (SELECT json(readfile('data/processed/manifest.json')) AS j) SELECT 1 AS stage_order, '原始记录' AS stage, json_extract(x.j, '$.raw_rows') AS count FROM x UNION ALL SELECT 2, '单调用答案', json_extract(x.j, '$.answer_count_distribution.1') FROM x UNION ALL SELECT 3, '参数说明可安全解析', json_extract(x.j, '$.adapter_accepted') FROM x UNION ALL SELECT 4, '通过快速筛选', json_extract(x.j, '$.fast_pilot_filter_accepted') FROM x UNION ALL SELECT 5, '去重并剔除 BFCL 相似项', json_extract(m.j, '$.counts.selection.available_after_exact_query_dedup.xlam') FROM m ORDER BY stage_order;",
+        "description": "联合 xLAM 审计与正式数据清单，复算各筛选阶段的保留规模。",
+        "executed_at": "2026-08-12T08:30:00Z",
+        "tables_used": ["reports/xLAM数据审计.json", "data/processed/manifest.json"]
+      }
+    },
+    {
+      "id": "quality_query",
+      "label": "合并数据问题审计",
+      "path": "reports/合并数据质量验证.json",
+      "query": {
+        "engine": "SQLite",
+        "language": "SQL",
+        "sql": "WITH x AS (SELECT json(readfile('reports/xLAM数据审计.json')) AS j), b AS (SELECT json(readfile('reports/BFCL数据泄漏检查.json')) AS j), v AS (SELECT json(readfile('reports/合并数据质量验证.json')) AS j) SELECT 'xLAM 缺少显式 required' AS issue, json_extract(x.j, '$.schema.required_field.missing') AS evidence_count FROM x UNION ALL SELECT 'xLAM 空字符串默认值', json_extract(x.j, '$.schema.default_field.empty_string') FROM x UNION ALL SELECT 'xLAM 与 BFCL 高相似问题', json_extract(b.j, '$.high_similarity_overlap_count') FROM b UNION ALL SELECT '正式 BFCL 残留', json_extract(v.j, '$.bfcl_leakage_residual_count') FROM v;",
+        "description": "从三份固定审计结果提取主要问题的证据计数；处理策略和判断由对应清洗规则给出。",
+        "executed_at": "2026-08-12T08:30:00Z",
+        "tables_used": ["reports/xLAM数据审计.json", "reports/BFCL数据泄漏检查.json", "reports/合并数据质量验证.json"]
+      }
+    }
+  ]
+}
