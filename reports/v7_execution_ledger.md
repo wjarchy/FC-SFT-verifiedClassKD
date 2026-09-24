@@ -69,3 +69,18 @@
 - Teacher 固定为 `Qwen/Qwen3-8B@b968826d9c46dd6066d109eabc6255188de91218`，本地路径 `/root/autodl-tmp/models/Qwen3-8B`。
 - 五个权重分片、权重索引、配置和 tokenizer 的 SHA256 已写入根 [`artifacts_manifest.json`](../artifacts_manifest.json)，模型大文件不进入 Git。
 - 已在完全离线模式加载配置和 tokenizer：hidden size 4,096、36 层、词表 151,936；下一步只对冻结的 K=4 pool 生成 Teacher cache。
+
+## 2026-09-24：Formal S0 恢复完成
+
+- 使用冻结的 Formal Train-3000 / Validation-300，从固定 Student revision 执行 4-bit QLoRA Gold-only SFT；3 轮共 564 optimizer steps，seed 42，LR 2e-4，有效 batch 16。
+- 三轮 Validation AST 为 78.33%、81.33%、82.67%；按预注册的最高 Validation AST 规则选择 epoch 3 / step 564。epoch 2 虽有更低 Validation loss，但不改变选模指标。
+- 选中 adapter SHA256 为 6bb07558d42735f32ae1676fc3eaae64c786523f8bb55bb4078a90b9ef06d2d5；训练峰值显存 6,868.4 MiB。
+- Internal-500 自由生成 AST 为 402/500 = 80.40%；Internal-Equiv-248 为 176/248 = 70.97%。这些值只用于后续 S0 difficulty 分层，不是 Class KD 效果结论。
+- Internal-Equiv 预测从完整 Internal 预测按冻结 ID 顺序确定性派生，没有重复跑推理；两个预测文件及其 manifest 均绑定数据、checkpoint 和 decoding 定义。
+- 完整报告：[v7_s0_recovery.md](v7_s0_recovery.md)；大文件路径与 SHA256 已写入根 [artifacts_manifest.json](../artifacts_manifest.json)。
+
+### 下一步
+
+1. 生成 Teacher 与 S0 在 Equiv-All / Internal-Equiv K=4 support 上的固定分数 cache。
+2. 在查看恢复基线 outcome 前，用 Equiv-All 分布冻结 confidence / entropy tertile。
+3. 恢复 Balanced-336×1 Candidate/Class 模型和逐样本预测。
