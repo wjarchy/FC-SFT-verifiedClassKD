@@ -113,3 +113,13 @@
 
 1. 恢复 Balanced-336×1 Candidate/Class checkpoint 与 Internal predictions。
 2. 立即执行优先级最高的 S0 Difficulty Analysis，再进入 scaling。
+
+## 2026-09-24：用户关机前保存点
+
+- 用户要求在合适节点保存并暂停。当前正在运行的 Balanced-336×1 Candidate KD 已完成整个 epoch，不在半个 optimizer step 或未落盘状态中止。
+- Candidate 分支完成 336 exposures / 21 optimizer steps；mean KD loss 0.037090，峰值显存 18,363.7 MiB。
+- 最终 checkpoint 为 checkpoint-step-000021，adapter SHA256 为 e458945adc6a16c80d11f306f8ab761f1cf812734c26e3708c9704bb4eeea0a2。
+- optimizer、RNG、trainer state、run manifest、training summary 和 training log 均已保存并写入根 artifacts_manifest.json；该目录约 267 MiB。
+- Candidate 训练已完成但尚未做 Internal free-generation；Balanced-336×1 Class 分支尚未启动，因此当前没有不公平的半对比较，也没有产生 KD outcome。
+- 关机前没有后台 GPU 进程需要保留。下一次从 Class 分支开始，然后依次评测 Candidate/Class 并执行 S0 Difficulty。
+- 精确恢复说明：[v7_shutdown_checkpoint.md](v7_shutdown_checkpoint.md)。
