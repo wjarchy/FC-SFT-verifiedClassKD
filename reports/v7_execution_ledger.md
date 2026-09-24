@@ -63,3 +63,9 @@
 - `Balanced-336` ID 严格属于 `Equiv-All`；`Internal-Equiv` 与 `Equiv-All` 无 ID 重叠。
 - 机器可读清单：[`data/candidates/v7/manifest.json`](../data/candidates/v7/manifest.json)，SHA256 `4dae3a369f4de6150de29157cbdd7024b51eaab90744a6d08024a3cb6861874d`。
 - 大型 JSONL 由 Git 忽略，但路径、输入/输出 SHA256 和生成命令均已保存；Teacher cache 将直接绑定此 manifest。
+
+## 2026-09-24：Teacher 权重恢复并固定
+
+- Teacher 固定为 `Qwen/Qwen3-8B@b968826d9c46dd6066d109eabc6255188de91218`，本地路径 `/root/autodl-tmp/models/Qwen3-8B`。
+- 五个权重分片、权重索引、配置和 tokenizer 的 SHA256 已写入根 [`artifacts_manifest.json`](../artifacts_manifest.json)，模型大文件不进入 Git。
+- 已在完全离线模式加载配置和 tokenizer：hidden size 4,096、36 层、词表 151,936；下一步只对冻结的 K=4 pool 生成 Teacher cache。
