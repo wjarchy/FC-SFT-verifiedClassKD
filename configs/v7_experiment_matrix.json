@@ -1,0 +1,93 @@
+{
+  "manifest_version": 1,
+  "kind": "v7_frozen_experiment_matrix",
+  "frozen_at_utc": "2026-09-24",
+  "common": {
+    "config": "configs/v7_rtx3090.yaml",
+    "s0_dir": "outputs/v7_formal_s0_seed42",
+    "student_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "teacher_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "teacher_cache": "data/cache/v7/teacher/teacher_equiv_all_scores.jsonl",
+    "temperature": 2.0,
+    "loss_weight": 1.0,
+    "alpha": 1.0,
+    "learning_rate": 0.0002,
+    "weight_decay": 0.0,
+    "batch_size": 16,
+    "max_grad_norm": 1.0,
+    "max_length": 2560,
+    "seed": 42,
+    "evaluation_split": "data/processed/v7/internal.jsonl",
+    "evaluation_batch_size": 4,
+    "evaluation_max_new_tokens": 192,
+    "decoding": "deterministic_greedy_left_padded_batch"
+  },
+  "runs": {
+    "balanced336_e1_candidate": {
+      "objective": "candidate",
+      "data": "data/processed/v7/balanced_336.jsonl",
+      "pool": "data/candidates/v7/balanced_336_k4.jsonl",
+      "epochs": 1,
+      "unique_samples": 336,
+      "sample_exposures": 336,
+      "optimizer_steps_per_epoch": 21,
+      "total_optimizer_steps": 21,
+      "output": "outputs/v7_kd/balanced336_e1_candidate"
+    },
+    "balanced336_e1_class": {
+      "objective": "class",
+      "data": "data/processed/v7/balanced_336.jsonl",
+      "pool": "data/candidates/v7/balanced_336_k4.jsonl",
+      "epochs": 1,
+      "unique_samples": 336,
+      "sample_exposures": 336,
+      "optimizer_steps_per_epoch": 21,
+      "total_optimizer_steps": 21,
+      "output": "outputs/v7_kd/balanced336_e1_class"
+    },
+    "balanced336_e4_candidate": {
+      "objective": "candidate",
+      "data": "data/processed/v7/balanced_336.jsonl",
+      "pool": "data/candidates/v7/balanced_336_k4.jsonl",
+      "epochs": 4,
+      "unique_samples": 336,
+      "sample_exposures": 1344,
+      "optimizer_steps_per_epoch": 21,
+      "total_optimizer_steps": 84,
+      "output": "outputs/v7_kd/balanced336_e4_candidate"
+    },
+    "balanced336_e4_class": {
+      "objective": "class",
+      "data": "data/processed/v7/balanced_336.jsonl",
+      "pool": "data/candidates/v7/balanced_336_k4.jsonl",
+      "epochs": 4,
+      "unique_samples": 336,
+      "sample_exposures": 1344,
+      "optimizer_steps_per_epoch": 21,
+      "total_optimizer_steps": 84,
+      "output": "outputs/v7_kd/balanced336_e4_class"
+    },
+    "equiv_all_e1_candidate": {
+      "objective": "candidate",
+      "data": "data/processed/v7/equiv_all.jsonl",
+      "pool": "data/candidates/v7/equiv_all_k4.jsonl",
+      "epochs": 1,
+      "unique_samples": 1393,
+      "sample_exposures": 1393,
+      "optimizer_steps_per_epoch": 88,
+      "total_optimizer_steps": 88,
+      "output": "outputs/v7_kd/equiv_all_e1_candidate"
+    },
+    "equiv_all_e1_class": {
+      "objective": "class",
+      "data": "data/processed/v7/equiv_all.jsonl",
+      "pool": "data/candidates/v7/equiv_all_k4.jsonl",
+      "epochs": 1,
+      "unique_samples": 1393,
+      "sample_exposures": 1393,
+      "optimizer_steps_per_epoch": 88,
+      "total_optimizer_steps": 88,
+      "output": "outputs/v7_kd/equiv_all_e1_class"
+    }
+  }
+}
