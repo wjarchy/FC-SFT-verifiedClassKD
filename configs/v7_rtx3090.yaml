@@ -1,0 +1,20 @@
+# V7 recovery on RTX 3090. Inherits the frozen optimizer/QLoRA definition.
+defaults:
+  - rtx3090
+
+hardware:
+  # Recovered Formal Train has two rows above 2048; maximum is 2392.
+  # 2560 is the smallest round ceiling that preserves every Gold and K=4 candidate.
+  max_length: 2560
+
+training:
+  max_length: 2560
+
+candidates:
+  K: 4
+
+scoring:
+  temperature: 2.0
+
+v7:
+  formal_data_manifest: data/processed/v7/manifest.json

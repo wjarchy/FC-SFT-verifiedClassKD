@@ -38,3 +38,20 @@
 1. 固定并下载 Student/Teacher revision，完成真实 GPU 端到端 smoke。
 2. 使用冻结的 Formal Train/Validation 恢复 Formal S0。
 3. 再生成 K=4 Teacher cache 和恢复 Balanced-336×1 两基线。
+
+## 2026-09-24：Phase 0 与 S0 训练前 Gate 完成
+
+- Student 固定为 `Qwen/Qwen3-1.7B@70d244cc86ccca08cf5af4e1e306ecf908b1ad5e`，本地路径 `/root/autodl-tmp/models/Qwen3-1.7B`；两个权重分片 SHA256 已写入根 manifest。
+- Teacher 固定为 `Qwen/Qwen3-8B@b968826d9c46dd6066d109eabc6255188de91218`，权重尚待下载。
+- 73 项测试通过。独立数值检查：`KL_candidate=0.149475211619`、`KL_inter=0.022730254805`、`KL_intra=0.126744956814`，残差 `2.776e-17`。
+- 真实 1.7B 4-bit QLoRA smoke：SFT loss `1.4807`；Class KD loss `0.002017`；SFT 和 Class KD 均产生有限 LoRA 梯度，冻结 base 无梯度；adapter 可保存；峰值显存 4,256.8 MiB。
+- Formal 预编码首次用旧上限 2,048 时在 `xlam_4469` 主动失败，证明无静默截断。全量审计显示 Train 仅 2/3,000 条超过 2,048，最大 2,392；Validation 最大 1,893；Internal 最大 1,965。
+- 新增 V7 专用配置 `configs/v7_rtx3090.yaml`，把 `max_length` 固定为 2,560。全部 S0 Gold 与 Equiv-All/Balanced/Internal-Equiv K=4 均低于此上限；Internal 最长 prompt+192 生成预算为 2,118。
+- 最长 2,392-token 样本真实前反向通过，loss `0.248720`，峰值显存 8,047.3 MiB。Formal 训练预算确认为 3 轮、每轮 188 optimizer steps、总计 564 steps。
+- 完整报告：[`v7_recovery_smoke.md`](v7_recovery_smoke.md)。
+
+### 下一步
+
+1. 启动可断点恢复的 Formal S0 训练和三轮 Validation 选模。
+2. 保存 selected adapter 与 Internal/Equiv free-generation predictions。
+3. 下载固定 Teacher 并生成 K=4 cache。
