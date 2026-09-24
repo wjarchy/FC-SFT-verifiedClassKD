@@ -48,6 +48,16 @@
       "unit_tests": 73,
       "fixture_peak_gpu_mb": 4256.8,
       "longest_sample_peak_gpu_mb": 8047.3
+    },
+    {
+      "name": "v7_k4_candidate_pools",
+      "status": "complete",
+      "manifest": "data/candidates/v7/manifest.json",
+      "manifest_sha256": "4dae3a369f4de6150de29157cbdd7024b51eaab90744a6d08024a3cb6861874d",
+      "rows": 1977,
+      "candidates": 7908,
+      "generation_command": "PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_build_k4.py",
+      "large_files_git_ignored": true
     }
   ]
 }

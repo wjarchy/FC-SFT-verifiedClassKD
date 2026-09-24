@@ -1,0 +1,54 @@
+{
+  "manifest_version": 1,
+  "kind": "v7_k4_functional_candidate_pools",
+  "created_at_utc": "2026-09-24T04:40:44.757751+00:00",
+  "command": [
+    "scripts/v7_build_k4.py"
+  ],
+  "definition": {
+    "order": [
+      "gold",
+      "equivalent",
+      "wrong_argument",
+      "wrong_function"
+    ],
+    "class_indices": [
+      0,
+      0,
+      1,
+      2
+    ],
+    "formal_manifest": "data/processed/v7/manifest.json",
+    "formal_manifest_sha256": "5c46124daae63779e164a2b21ef12d52d9e1e9cc3b987c32519b47d3c2c94512"
+  },
+  "git": {
+    "commit": "a05593c8674ab389fa9ad33681b4a56d1b601e8a",
+    "dirty": false
+  },
+  "artifacts": {
+    "equiv_all": {
+      "input_path": "data/processed/v7/equiv_all.jsonl",
+      "input_sha256": "7b21fe7d584443f87f09572f78ba849ef34d075a257006052894f1ab094f82d0",
+      "output_path": "data/candidates/v7/equiv_all_k4.jsonl",
+      "output_sha256": "26b42b53a5e270c2b216805eca15bec96ab4f498c489e9868355678eae67ce1f",
+      "rows": 1393,
+      "candidates": 5572
+    },
+    "balanced_336": {
+      "input_path": "data/processed/v7/balanced_336.jsonl",
+      "input_sha256": "aee4fa587b609a0c336aa43cb524678b7cfc6d52e40fb2ec1ee93b16146e9ed0",
+      "output_path": "data/candidates/v7/balanced_336_k4.jsonl",
+      "output_sha256": "1d0e7e8ffcb5477e6017f33c1a41cd142d15faf1d7316ba073cbc26411787d72",
+      "rows": 336,
+      "candidates": 1344
+    },
+    "internal_equiv": {
+      "input_path": "data/processed/v7/internal_equiv.jsonl",
+      "input_sha256": "091a29c294ca8102ada9f896468b0cb2d0ad3b6c302884e2003beaea9ca3ffd2",
+      "output_path": "data/candidates/v7/internal_equiv_k4.jsonl",
+      "output_sha256": "12d71c17021f5542a25931bc44a858405355220bfc2d62b839c5f3babfa79ad7",
+      "rows": 248,
+      "candidates": 992
+    }
+  }
+}

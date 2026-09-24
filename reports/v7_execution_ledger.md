@@ -55,3 +55,11 @@
 1. 启动可断点恢复的 Formal S0 训练和三轮 Validation 选模。
 2. 保存 selected adapter 与 Internal/Equiv free-generation predictions。
 3. 下载固定 Teacher 并生成 K=4 cache。
+
+## 2026-09-24：K=4 Candidate Pool 冻结
+
+- `Equiv-All` 1,393 行、`Balanced-336` 336 行、`Internal-Equiv` 248 行，共 1,977 个 sample / 7,908 个 candidate。
+- 每条顺序固定为 Gold、Equivalent、Wrong Argument、Wrong Function；功能类索引固定为 `[0,0,1,2]`，四个 surface 唯一。
+- `Balanced-336` ID 严格属于 `Equiv-All`；`Internal-Equiv` 与 `Equiv-All` 无 ID 重叠。
+- 机器可读清单：[`data/candidates/v7/manifest.json`](../data/candidates/v7/manifest.json)，SHA256 `4dae3a369f4de6150de29157cbdd7024b51eaab90744a6d08024a3cb6861874d`。
+- 大型 JSONL 由 Git 忽略，但路径、输入/输出 SHA256 和生成命令均已保存；Teacher cache 将直接绑定此 manifest。
