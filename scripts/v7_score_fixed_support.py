@@ -108,6 +108,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--temperature", type=float, default=2.0)
     parser.add_argument("--alpha", type=float, default=1.0)
     parser.add_argument("--max-length", type=int, default=None)
+    parser.add_argument("--candidate-batch-size", type=int, default=4, choices=[1, 2, 4])
     parser.add_argument("--resume", choices=["auto", "none"], default="auto")
     return parser.parse_args()
 
@@ -157,31 +158,20 @@ def score_one(
     candidates: list[CandidateRecord],
     max_length: int,
     alpha: float,
+    candidate_batch_size: int,
 ) -> list[float]:
-    try:
+    values: list[float] = []
+    for start in range(0, len(candidates), candidate_batch_size):
         scores = score_candidate_sequences(
             model,
             tokenizer,
             record,
-            candidates,
+            candidates[start : start + candidate_batch_size],
             max_length=max_length,
             alpha=alpha,
         )
-        return [float(value) for value in scores.detach().cpu()]
-    except torch.OutOfMemoryError:
-        torch.cuda.empty_cache()
-        values: list[float] = []
-        for candidate in candidates:
-            score = score_candidate_sequences(
-                model,
-                tokenizer,
-                record,
-                [candidate],
-                max_length=max_length,
-                alpha=alpha,
-            )
-            values.append(float(score.detach().cpu()[0]))
-        return values
+        values.extend(float(value) for value in scores.detach().cpu())
+    return values
 
 
 def cache_row(
@@ -192,9 +182,12 @@ def cache_row(
     max_length: int,
     alpha: float,
     temperature: float,
+    candidate_batch_size: int,
 ) -> dict[str, Any]:
     candidates = [CandidateRecord.model_validate(item) for item in pool_row["candidates"]]
-    scores = score_one(model, tokenizer, record, candidates, max_length, alpha)
+    scores = score_one(
+        model, tokenizer, record, candidates, max_length, alpha, candidate_batch_size
+    )
     probabilities = candidate_probabilities(scores, temperature=temperature)
     correct_mass = probabilities[0] + probabilities[1]
     intra = [probabilities[0] / correct_mass, probabilities[1] / correct_mass]
@@ -222,6 +215,8 @@ def main() -> int:
         raise ValueError("temperature must be finite and positive")
     if not math.isfinite(args.alpha) or args.alpha < 0:
         raise ValueError("alpha must be finite and non-negative")
+    if args.candidate_batch_size not in (1, 2, 4):
+        raise ValueError("candidate-batch-size must be one of 1, 2, or 4")
     cfg = load_config(args.config)
     model_path = resolve(
         args.model
@@ -285,6 +280,7 @@ def main() -> int:
         "alpha": args.alpha,
         "temperature": args.temperature,
         "max_length": max_length,
+        "candidate_batch_size": args.candidate_batch_size,
     }
     run_signature = signature(definition)
     manifest_path = output_dir / "manifest.json"
@@ -336,6 +332,7 @@ def main() -> int:
                 max_length,
                 args.alpha,
                 args.temperature,
+                args.candidate_batch_size,
             )
             append_jsonl(work["output_path"], row)
             rows.append(row)
