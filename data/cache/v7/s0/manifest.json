@@ -1,0 +1,90 @@
+{
+  "manifest_version": 1,
+  "created_at_utc": "2026-09-24T10:17:30.251301+00:00",
+  "status": "complete",
+  "run_signature": "c1ad558863d7448c12c58aedcba5aa6359efd1fcb1a0a71eaa73670194635fe7",
+  "definition": {
+    "kind": "s0",
+    "model_path": "/root/autodl-tmp/models/Qwen3-1.7B",
+    "model_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "adapter": "/root/FC_ClassKD/outputs/v7_formal_s0_seed42/checkpoint-step-000564/adapter",
+    "adapter_sha256": "6bb07558d42735f32ae1676fc3eaae64c786523f8bb55bb4078a90b9ef06d2d5",
+    "load_in_4bit": true,
+    "pool_manifest": "data/candidates/v7/manifest.json",
+    "pool_manifest_sha256": "4dae3a369f4de6150de29157cbdd7024b51eaab90744a6d08024a3cb6861874d",
+    "splits": [
+      "equiv_all",
+      "internal_equiv"
+    ],
+    "alpha": 1.0,
+    "temperature": 2.0,
+    "max_length": 2560,
+    "candidate_batch_size": 4
+  },
+  "command": [
+    "scripts/v7_score_fixed_support.py",
+    "--config",
+    "v7_rtx3090",
+    "--kind",
+    "s0",
+    "--model",
+    "/root/autodl-tmp/models/Qwen3-1.7B",
+    "--model-revision",
+    "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "--adapter",
+    "outputs/v7_formal_s0_seed42/checkpoint-step-000564/adapter",
+    "--load-in-4bit",
+    "--pool-manifest",
+    "data/candidates/v7/manifest.json",
+    "--splits",
+    "equiv_all",
+    "internal_equiv",
+    "--output-dir",
+    "data/cache/v7/s0",
+    "--temperature",
+    "2",
+    "--alpha",
+    "1",
+    "--max-length",
+    "2560",
+    "--candidate-batch-size",
+    "4",
+    "--resume",
+    "auto"
+  ],
+  "git": {
+    "commit": "1d1974167ce9b16b30861d2a000c2834d4fb5d1c",
+    "dirty": false
+  },
+  "environment": {
+    "python": "3.11.16",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "gpu": "NVIDIA GeForce RTX 3090"
+  },
+  "artifacts": {
+    "equiv_all": {
+      "status": "complete",
+      "rows": 1393,
+      "data_path": "data/processed/v7/equiv_all.jsonl",
+      "data_sha256": "7b21fe7d584443f87f09572f78ba849ef34d075a257006052894f1ab094f82d0",
+      "pool_path": "data/candidates/v7/equiv_all_k4.jsonl",
+      "pool_sha256": "26b42b53a5e270c2b216805eca15bec96ab4f498c489e9868355678eae67ce1f",
+      "output_path": "data/cache/v7/s0/s0_equiv_all_scores.jsonl",
+      "output_sha256": "56dddd411fa5828e78cdba7f5a3e53cec1e380f303de60f621799d876a56e214"
+    },
+    "internal_equiv": {
+      "status": "complete",
+      "rows": 248,
+      "data_path": "data/processed/v7/internal_equiv.jsonl",
+      "data_sha256": "091a29c294ca8102ada9f896468b0cb2d0ad3b6c302884e2003beaea9ca3ffd2",
+      "pool_path": "data/candidates/v7/internal_equiv_k4.jsonl",
+      "pool_sha256": "12d71c17021f5542a25931bc44a858405355220bfc2d62b839c5f3babfa79ad7",
+      "output_path": "data/cache/v7/s0/s0_internal_equiv_scores.jsonl",
+      "output_sha256": "5b5f836565bff6667045ae2ada47559c8583ca407fb971b68f7edc04e47e45f0"
+    }
+  },
+  "peak_gpu_memory_mb": 13291.466796875,
+  "updated_at_utc": "2026-09-24T10:26:30.481058+00:00",
+  "completed_at_utc": "2026-09-24T10:26:30.484375+00:00"
+}

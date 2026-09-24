@@ -99,3 +99,17 @@
 
 1. 用 selected S0 对同一 Equiv-All / Internal-Equiv support 评分。
 2. 由 Equiv-All 分布冻结 S0 confidence 和 Teacher entropy tertile 后，才评测恢复的 KD 基线 outcome。
+
+## 2026-09-24：S0 fixed-support cache 与分析阈值冻结
+
+- selected S0 adapter 以 4-bit、tau=2、alpha=1 对 Equiv-All 1,393 行和 Internal-Equiv 248 行完成 K=4 打分；正式峰值显存 13,291.5 MiB。
+- Equiv-All S0 正确功能类概率 min/median/max 为 0.5150/0.6027/0.7210；Internal-Equiv 为 0.5172/0.6018/0.6884。fixed support class argmax 全对不等同于 free-generation 全对，difficulty 仍使用连续 confidence 与独立 free-generation correctness 两个视角。
+- 在任何恢复 KD baseline prediction 生成前，已只用 Equiv-All-1393 冻结三分位阈值。
+- S0 confidence q1/q2 = 0.58942356 / 0.61558665；Teacher normalized intra-class entropy q1/q2 = 0.96580232 / 0.98335794。
+- 线性 quantile 和边界规则固定为 low ≤ q1，q1 < mid ≤ q2，high > q2；训练侧桶数均为 465/464/464。
+- 完整定义：[v7_analysis_threshold_freeze.md](v7_analysis_threshold_freeze.md) 与 [configs/v7_analysis_thresholds.json](../configs/v7_analysis_thresholds.json)。
+
+### 下一步
+
+1. 恢复 Balanced-336×1 Candidate/Class checkpoint 与 Internal predictions。
+2. 立即执行优先级最高的 S0 Difficulty Analysis，再进入 scaling。
