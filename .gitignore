@@ -38,6 +38,9 @@ data/diagnostics/**
 data/candidates/**
 !data/candidates/.gitkeep
 !data/candidates/README.md
+!data/candidates/v7/
+data/candidates/v7/*
+!data/candidates/v7/manifest.json
 data/cache/**
 !data/cache/.gitkeep
 !data/cache/README.md
