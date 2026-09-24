@@ -223,6 +223,9 @@ def main() -> int:
         "equivalence_type": grouped(
             samples, ["A", "B", "C"], lambda row: str(row["equivalence_type"])
         ),
+        "teacher_entropy": grouped(
+            samples, ["low", "mid", "high"], lambda row: str(row["teacher_entropy_bucket"])
+        ),
     }
     confidence_deltas = [
         results["s0_confidence"][label]["delta_class_minus_candidate"]
@@ -293,6 +296,12 @@ def main() -> int:
 ## A/B/C
 
 {table(results["equivalence_type"], "等价类型")}
+
+## Teacher 类内 entropy（同步保存，主分析之后解释）
+
+阈值：q1={entropy_thresholds["q1"]:.8f}，q2={entropy_thresholds["q2"]:.8f}；由训练侧 Equiv-All Teacher cache 预先冻结。
+
+{table(results["teacher_entropy"], "Teacher entropy")}
 
 ## 统计口径
 
