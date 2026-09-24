@@ -29,6 +29,8 @@ candidates:
 models:
   student_local: /root/autodl-tmp/models/Qwen3-1.7B
   student_revision: 70d244cc86ccca08cf5af4e1e306ecf908b1ad5e
+  teacher_local: /root/autodl-tmp/models/Qwen3-8B
+  teacher_revision: b968826d9c46dd6066d109eabc6255188de91218
   teacher_inference:
     load_in_4bit: false
     bf16: true

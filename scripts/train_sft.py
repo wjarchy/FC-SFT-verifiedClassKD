@@ -212,9 +212,7 @@ def save_checkpoint(
 def resolve_resume_checkpoint(output_dir: Path, resume: str) -> Path | None:
     if resume == "none":
         if output_dir.exists() and any(output_dir.iterdir()):
-            raise FileExistsError(
-                f"--resume none refuses non-empty output directory: {output_dir}"
-            )
+            raise FileExistsError(f"--resume none refuses non-empty output directory: {output_dir}")
         return None
     if resume == "auto":
         pointer = output_dir / "latest_checkpoint.json"
@@ -273,6 +271,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--train-split", default="train")
     parser.add_argument("--val-split", default="val")
+    parser.add_argument("--train-path", default=None, help="显式 Train JSONL；优先于 --train-split")
+    parser.add_argument(
+        "--val-path", default=None, help="显式 Validation JSONL；优先于 --val-split"
+    )
+    parser.add_argument("--data-manifest", default="data/processed/manifest.json")
     parser.add_argument("--output", default="outputs/s0_qwen3_1.7b_seed42")
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--micro-batch-size", type=int, default=None)
@@ -338,24 +341,16 @@ def resolved_hyperparameters(args: argparse.Namespace, cfg: Any) -> dict[str, An
             else int(training.gradient_accumulation_steps)
         ),
         "learning_rate": (
-            args.learning_rate
-            if args.learning_rate is not None
-            else float(training.learning_rate)
+            args.learning_rate if args.learning_rate is not None else float(training.learning_rate)
         ),
         "weight_decay": (
-            args.weight_decay
-            if args.weight_decay is not None
-            else float(training.weight_decay)
+            args.weight_decay if args.weight_decay is not None else float(training.weight_decay)
         ),
         "warmup_ratio": (
-            args.warmup_ratio
-            if args.warmup_ratio is not None
-            else float(training.warmup_ratio)
+            args.warmup_ratio if args.warmup_ratio is not None else float(training.warmup_ratio)
         ),
         "max_grad_norm": (
-            args.max_grad_norm
-            if args.max_grad_norm is not None
-            else float(training.max_grad_norm)
+            args.max_grad_norm if args.max_grad_norm is not None else float(training.max_grad_norm)
         ),
         "max_length": (
             args.max_length if args.max_length is not None else int(training.max_length)
@@ -387,6 +382,16 @@ def validate_hyperparameters(hparams: dict[str, Any]) -> None:
         raise ValueError("weight_decay must be non-negative")
 
 
+def resolve_input_path(explicit: str | None, fallback: Path) -> Path:
+    """Resolve a declared experiment input without silently accepting a missing file."""
+    path = Path(explicit) if explicit is not None else fallback
+    if not path.is_absolute():
+        path = PROJECT_ROOT / path
+    if not path.is_file():
+        raise FileNotFoundError(f"experiment input not found: {path}")
+    return path
+
+
 def prepare_inputs(
     args: argparse.Namespace,
     cfg: Any,
@@ -404,11 +409,9 @@ def prepare_inputs(
     splits_dir = Path(cfg.paths.splits)
     if not splits_dir.is_absolute():
         splits_dir = PROJECT_ROOT / splits_dir
-    train_path = splits_dir / f"{args.train_split}.jsonl"
-    val_path = splits_dir / f"{args.val_split}.jsonl"
-    train_records = limit_records(
-        read_split(train_path), args.max_train_samples, "train"
-    )
+    train_path = resolve_input_path(args.train_path, splits_dir / f"{args.train_split}.jsonl")
+    val_path = resolve_input_path(args.val_path, splits_dir / f"{args.val_split}.jsonl")
+    train_records = limit_records(read_split(train_path), args.max_train_samples, "train")
     val_records = limit_records(read_split(val_path), args.max_val_samples, "validation")
     train_ids = {record.id for record in train_records}
     val_ids = {record.id for record in val_records}
@@ -633,11 +636,16 @@ def main() -> int:
         output_dir = PROJECT_ROOT / output_dir
     checkpoint = resolve_resume_checkpoint(output_dir, args.resume)
     output_dir.mkdir(parents=True, exist_ok=True)
+    data_manifest_path = resolve_input_path(
+        args.data_manifest,
+        PROJECT_ROOT / "data/processed/manifest.json",
+    )
     signature_payload = {
         "model": model_id,
         "model_revision": model_revision,
         "train_sha256": preparation["train_sha256"],
         "validation_sha256": preparation["validation_sha256"],
+        "data_manifest_sha256": sha256_file(data_manifest_path),
         "train_count": len(train_examples),
         "validation_count": len(val_examples),
         "hyperparameters": hparams,
@@ -667,10 +675,12 @@ def main() -> int:
                 "definition": signature_payload,
                 "preparation": preparation,
                 "data_manifest": {
-                    "path": "data/processed/manifest.json",
-                    "sha256": sha256_file(
-                        PROJECT_ROOT / "data/processed/manifest.json"
+                    "path": (
+                        str(data_manifest_path.relative_to(PROJECT_ROOT))
+                        if data_manifest_path.is_relative_to(PROJECT_ROOT)
+                        else str(data_manifest_path)
                     ),
+                    "sha256": sha256_file(data_manifest_path),
                 },
                 "model_files": model_file_inventory(model_id),
                 "command": ["scripts/train_sft.py", *sys.argv[1:]],
@@ -718,9 +728,7 @@ def main() -> int:
         checkpoint = save_checkpoint(output_dir, model, optimizer, scheduler, state)
         print(f"初始检查点：{checkpoint}", flush=True)
     else:
-        state = json.loads(
-            (checkpoint / "trainer_state.json").read_text(encoding="utf-8")
-        )
+        state = json.loads((checkpoint / "trainer_state.json").read_text(encoding="utf-8"))
         if state.get("run_signature") != signature:
             raise ValueError("checkpoint belongs to a different training definition")
         optimizer.load_state_dict(
@@ -735,9 +743,7 @@ def main() -> int:
     log_path = output_dir / "training_log.jsonl"
     start_time = time.time()
     invocation_id = utc_now()
-    for epoch_index in range(
-        int(state["next_epoch_index"]), int(hparams["epochs"])
-    ):
+    for epoch_index in range(int(state["next_epoch_index"]), int(hparams["epochs"])):
         groups = build_epoch_groups(
             len(train_examples),
             int(hparams["micro_batch_size"]),
@@ -746,17 +752,14 @@ def main() -> int:
             epoch_index,
         )
         first_group = (
-            int(state["next_group_index"])
-            if epoch_index == int(state["next_epoch_index"])
-            else 0
+            int(state["next_group_index"]) if epoch_index == int(state["next_epoch_index"]) else 0
         )
         if first_group > len(groups):
             raise ValueError("checkpoint next_group_index exceeds the epoch plan")
         for group_index in range(first_group, len(groups)):
             group = groups[group_index]
             group_token_count = sum(
-                supervised_token_count(batch_examples(train_examples, indices))
-                for indices in group
+                supervised_token_count(batch_examples(train_examples, indices)) for indices in group
             )
             group_loss_numerator = 0.0
             optimizer.zero_grad(set_to_none=True)
@@ -780,9 +783,7 @@ def main() -> int:
                 group_loss_numerator += value * current_tokens
                 state["current_epoch_loss_numerator"] += value * current_tokens
                 state["current_epoch_token_count"] += current_tokens
-            trainable = [
-                parameter for parameter in model.parameters() if parameter.requires_grad
-            ]
+            trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
             gradient_norm = torch.nn.utils.clip_grad_norm_(
                 trainable,
                 float(hparams["max_grad_norm"]),
@@ -807,12 +808,9 @@ def main() -> int:
                 "supervised_tokens": group_token_count,
             }
             append_jsonl(log_path, log_row)
-            if (
-                state["global_optimizer_step"]
-                % int(hparams["save_every_optimizer_steps"])
-                == 0
-                and group_index + 1 < len(groups)
-            ):
+            if state["global_optimizer_step"] % int(
+                hparams["save_every_optimizer_steps"]
+            ) == 0 and group_index + 1 < len(groups):
                 saved = save_checkpoint(output_dir, model, optimizer, scheduler, state)
                 print(
                     f"step={state['global_optimizer_step']}/{budget.total_optimizer_steps} "
@@ -821,8 +819,7 @@ def main() -> int:
                 )
 
         epoch_train_loss = (
-            state["current_epoch_loss_numerator"]
-            / state["current_epoch_token_count"]
+            state["current_epoch_loss_numerator"] / state["current_epoch_token_count"]
         )
         val_loss, val_tokens = validation_loss(
             model,

@@ -68,8 +68,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--splits",
         nargs="+",
-        choices=["train", "diagnostic"],
         default=["diagnostic", "train"],
+        help="data/splits 下的划分名；V7 推荐改用 --split-paths",
+    )
+    parser.add_argument(
+        "--split-paths",
+        nargs="+",
+        default=None,
+        metavar="NAME=JSONL",
+        help="显式命名输入，例如 internal=data/processed/v7/internal.jsonl；设置后替代 --splits",
     )
     parser.add_argument("--max-new-tokens", type=int, default=192)
     parser.add_argument("--max-samples", type=int, default=None, help="仅供冒烟测试")
@@ -80,6 +87,27 @@ def parse_args() -> argparse.Namespace:
 def resolve(path: str) -> Path:
     value = Path(path)
     return value if value.is_absolute() else PROJECT_ROOT / value
+
+
+def resolve_named_splits(args: argparse.Namespace) -> list[tuple[str, Path]]:
+    if args.split_paths is None:
+        pairs = [(name, f"data/splits/{name}.jsonl") for name in args.splits]
+    else:
+        pairs = []
+        for item in args.split_paths:
+            if "=" not in item:
+                raise ValueError(f"split path must use NAME=JSONL: {item}")
+            name, raw_path = item.split("=", 1)
+            if not name or not name.replace("_", "").replace("-", "").isalnum():
+                raise ValueError(f"invalid split name: {name!r}")
+            pairs.append((name, raw_path))
+    if len({name for name, _ in pairs}) != len(pairs):
+        raise ValueError("split names must be unique")
+    resolved = [(name, resolve(raw_path)) for name, raw_path in pairs]
+    missing = [str(path) for _, path in resolved if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(f"split JSONL missing: {missing}")
+    return resolved
 
 
 def main() -> int:
@@ -114,8 +142,7 @@ def main() -> int:
     output_dir = resolve(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     work: list[tuple[str, list[Any], Path, Path, dict[str, Any]]] = []
-    for split in args.splits:
-        split_path = PROJECT_ROOT / "data/splits" / f"{split}.jsonl"
+    for split, split_path in resolve_named_splits(args):
         records = read_split(split_path)
         if args.max_samples is not None:
             records = records[: args.max_samples]
@@ -137,7 +164,11 @@ def main() -> int:
             "split": split,
             "formal_run": args.max_samples is None,
             "record_count": len(records),
-            "split_path": str(split_path.relative_to(PROJECT_ROOT)),
+            "split_path": (
+                str(split_path.relative_to(PROJECT_ROOT))
+                if split_path.is_relative_to(PROJECT_ROOT)
+                else str(split_path)
+            ),
             "split_sha256": sha256_file(split_path),
             "model_path": model_id,
             "model_revision": cfg.models.get("student_revision"),
@@ -204,9 +235,7 @@ def main() -> int:
         for index in range(len(rows), len(records)):
             record = records[index]
             prompt = apply_chat_template(model_tokenizer, record, add_generation_prompt=True)
-            prompt_tokens = len(
-                model_tokenizer(prompt, add_special_tokens=False)["input_ids"]
-            )
+            prompt_tokens = len(model_tokenizer(prompt, add_special_tokens=False)["input_ids"])
             prediction = generate_function_call(
                 model,
                 model_tokenizer,
