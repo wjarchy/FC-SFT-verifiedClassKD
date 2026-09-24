@@ -27,6 +27,9 @@ data/raw/**
 data/processed/**
 !data/processed/.gitkeep
 !data/processed/manifest.json
+!data/processed/v7/
+data/processed/v7/*
+!data/processed/v7/manifest.json
 data/splits/**
 !data/splits/.gitkeep
 data/diagnostics/**

@@ -1,0 +1,202 @@
+{
+  "manifest_version": 1,
+  "created_at_utc": "2026-09-24T03:51:13.340197+00:00",
+  "command": "scripts/v7_build_formal_data.py --seed 42",
+  "seed": 42,
+  "definition": {
+    "sources": {
+      "xlam": {
+        "repo": "Salesforce/xlam-function-calling-60k",
+        "revision": "26d14ebfe18b1f7b524bd39b404b50af5dc97866"
+      },
+      "toolace_cleaned_revision": "74befe8a24c760ccad2b5d58bcf35d89b3bbd2be",
+      "toolace_schema_revision": "6bda777c88d21e5a204703c1ee45597a8fa4f734",
+      "bfcl_revision": "6ea57973c7a6097fd7c5915698c54c17c5b1b6c8"
+    },
+    "calibration_pool_size": 4650,
+    "calibration_note": "Chosen before model runs by minimizing disagreement with the V7 PRD's historical Train-3000 A/B/C control totals under the recovered rules.",
+    "split_sizes": {
+      "train": 3000,
+      "validation": 300,
+      "internal": 500,
+      "internal_equiv": 248,
+      "reserve": 14229
+    },
+    "equivalence_precedence": [
+      "C",
+      "B",
+      "A"
+    ],
+    "safe_xlam_default_policy": "nonempty_exact_type_and_gold_value",
+    "balanced_per_category": 112
+  },
+  "universe_counts": {
+    "xlam_filter_passed": 19642,
+    "xlam_after_bfcl_and_normalized_dedup": 17924,
+    "toolace_restored": 2103,
+    "universe": 20027,
+    "bfcl_excluded_ids": 102,
+    "bfcl_excluded_normalized_queries": 101
+  },
+  "counts": {
+    "train": {
+      "rows": 3000,
+      "sources": {
+        "toolace": 1343,
+        "xlam": 1657
+      },
+      "categories": {
+        "A": 1096,
+        "B": 112,
+        "C": 185,
+        "singleton": 1607
+      }
+    },
+    "validation": {
+      "rows": 300,
+      "sources": {
+        "toolace": 131,
+        "xlam": 169
+      },
+      "categories": {
+        "A": 110,
+        "B": 10,
+        "C": 17,
+        "singleton": 163
+      }
+    },
+    "internal": {
+      "rows": 500,
+      "sources": {
+        "toolace": 245,
+        "xlam": 255
+      },
+      "categories": {
+        "A": 183,
+        "B": 19,
+        "C": 46,
+        "singleton": 252
+      }
+    },
+    "internal_equiv": {
+      "rows": 248,
+      "sources": {
+        "toolace": 96,
+        "xlam": 152
+      },
+      "categories": {
+        "A": 183,
+        "B": 19,
+        "C": 46,
+        "singleton": 0
+      }
+    },
+    "internal_singleton": {
+      "rows": 252,
+      "sources": {
+        "toolace": 149,
+        "xlam": 103
+      },
+      "categories": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "singleton": 252
+      }
+    },
+    "equiv_all": {
+      "rows": 1393,
+      "sources": {
+        "toolace": 434,
+        "xlam": 959
+      },
+      "categories": {
+        "A": 1096,
+        "B": 112,
+        "C": 185,
+        "singleton": 0
+      }
+    },
+    "balanced_336": {
+      "rows": 336,
+      "sources": {
+        "toolace": 55,
+        "xlam": 281
+      },
+      "categories": {
+        "A": 112,
+        "B": 112,
+        "C": 112,
+        "singleton": 0
+      }
+    },
+    "reserve": {
+      "rows": 14229,
+      "sources": {
+        "toolace": 333,
+        "xlam": 13896
+      },
+      "categories": {
+        "A": 5501,
+        "B": 928,
+        "C": 1523,
+        "singleton": 6277
+      }
+    }
+  },
+  "historical_control_totals": {
+    "A": 1094,
+    "B": 112,
+    "C": 185,
+    "equiv_all": 1391
+  },
+  "deviations_from_historical": {
+    "A": 2,
+    "B": 0,
+    "C": 0,
+    "equiv_all": 2
+  },
+  "unused_after_reserve": 1998,
+  "files": {
+    "train": {
+      "path": "data/processed/v7/train.jsonl",
+      "bytes": 7710455,
+      "sha256": "03c2822ae5d899b8bc3e811f5b0584985cf0d9d6b60d0922dff4e811701b3dd9"
+    },
+    "validation": {
+      "path": "data/processed/v7/validation.jsonl",
+      "bytes": 799819,
+      "sha256": "33451b419925566fd0878509663e9f06877736508afd28f577582c3fa70cc881"
+    },
+    "internal": {
+      "path": "data/processed/v7/internal.jsonl",
+      "bytes": 1346540,
+      "sha256": "32bd45a36694e5ac7469c7b563f433fb0e57e3fb5bee35cf268aa755134977e9"
+    },
+    "internal_equiv": {
+      "path": "data/processed/v7/internal_equiv.jsonl",
+      "bytes": 740178,
+      "sha256": "091a29c294ca8102ada9f896468b0cb2d0ad3b6c302884e2003beaea9ca3ffd2"
+    },
+    "internal_singleton": {
+      "path": "data/processed/v7/internal_singleton.jsonl",
+      "bytes": 606362,
+      "sha256": "9aa77a396097becce4253bed1a4381a57ac57dc1c8dbb3367731599ba23cb59d"
+    },
+    "equiv_all": {
+      "path": "data/processed/v7/equiv_all.jsonl",
+      "bytes": 3870737,
+      "sha256": "7b21fe7d584443f87f09572f78ba849ef34d075a257006052894f1ab094f82d0"
+    },
+    "balanced_336": {
+      "path": "data/processed/v7/balanced_336.jsonl",
+      "bytes": 921989,
+      "sha256": "aee4fa587b609a0c336aa43cb524678b7cfc6d52e40fb2ec1ee93b16146e9ed0"
+    },
+    "reserve": {
+      "path": "data/processed/v7/reserve.jsonl",
+      "bytes": 34601693,
+      "sha256": "72d2b209e521ffd9884ff20ea44347e78a2f8130babb0a937a843981bc1d8cba"
+    }
+  }
+}

@@ -15,5 +15,14 @@
     "student": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
     "teacher": null
   },
-  "artifacts": []
+  "artifacts": [
+    {
+      "name": "v7_formal_data",
+      "status": "complete",
+      "manifest": "data/processed/v7/manifest.json",
+      "manifest_sha256": "5c46124daae63779e164a2b21ef12d52d9e1e9cc3b987c32519b47d3c2c94512",
+      "generation_command": "HF_HOME=/root/autodl-tmp/hf_cache PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_build_formal_data.py --seed 42",
+      "large_files_git_ignored": true
+    }
+  ]
 }
