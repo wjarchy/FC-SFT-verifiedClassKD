@@ -2,13 +2,16 @@
 
 本项目研究单轮、单工具调用场景下，由验证器定义等价类的 Function Calling 蒸馏方法。
 
-当前唯一执行基线是 [`05_FC_Equivalence_Class_KD_GoNoGo_Pilot_PRD_v5_FINAL.md`](05_FC_Equivalence_Class_KD_GoNoGo_Pilot_PRD_v5_FINAL.md)。[`FC_ClassKD_Fast_Pilot_PRD_v4.md`](FC_ClassKD_Fast_Pilot_PRD_v4.md) 和 [`FC_Equivalence_Distillation_Pilot_PRD_v3.md`](FC_Equivalence_Distillation_Pilot_PRD_v3.md) 只保留为历史设计背景。
+当前唯一执行基线是 [`ClassKD_V7_Lean_Execution_PRD.md`](ClassKD_V7_Lean_Execution_PRD.md)。V3–V6 文档只保留为历史设计与恢复依据，不得覆盖 V7 的固定执行顺序和判据。
 
-截至 v4 阶段，项目已经完成正式 3,250 条数据划分、公共 Qwen3-1.7B S0 训练，以及 S0 在 Diagnostic 和 Train 上的自由生成；两套 K=6 候选池草稿和人工审核表也已生成。v5 已重设研究问题、等价类定义和 Go/No-Go 顺序，因此这些产物暂记为历史可复用资产，不能直接视为通过 v5 Gate。当前第一步是构造 300 条 `opportunity_probe`，实现确定性 canonicalizer，并输出 Data Opportunity Report。准确状态见 [`实验进度.md`](实验进度.md)。
+当前机器为灾后恢复实例。V6/V7 的大文件资产已经丢失，现按 V7 PRD 只恢复 Formal 数据、Formal S0、K=4 候选池、Teacher cache 和必要基线，不重跑已经有历史结论的前置 Gate。实时状态见 [`reports/v7_execution_ledger.md`](reports/v7_execution_ledger.md)。
 
 ## 项目导航
 
-- [`05_FC_Equivalence_Class_KD_GoNoGo_Pilot_PRD_v5_FINAL.md`](05_FC_Equivalence_Class_KD_GoNoGo_Pilot_PRD_v5_FINAL.md)：当前唯一可执行 Pilot PRD。
+- [`ClassKD_V7_Lean_Execution_PRD.md`](ClassKD_V7_Lean_Execution_PRD.md)：当前唯一可执行 PRD。
+- [`reports/v7_execution_ledger.md`](reports/v7_execution_ledger.md)：V7 恢复、执行和阶段结果账本。
+- [`artifacts_manifest.json`](artifacts_manifest.json)：大文件路径、哈希、命令和模型/数据版本清单。
+- [`06_FC_形式不变性_ClassKD_PRD_v6.md`](06_FC_形式不变性_ClassKD_PRD_v6.md)：V6 历史定义与结果背景。
 - [`实验实施计划.md`](实验实施计划.md)：V5 P0–P15 的当前执行与验收清单。
 - [`实验决策记录.md`](实验决策记录.md)：影响实验定义和公平性的固定决定。
 - [`实验工作日志.md`](实验工作日志.md)：逐次执行记录。

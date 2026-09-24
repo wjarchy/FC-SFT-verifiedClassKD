@@ -5,6 +5,10 @@
 当前报告：
 
 - `快速试验结果模板.md`：V5 的 Opportunity、Gap、四分支和最终判定统一模板。
+- `v7_execution_ledger.md`：V7 灾后恢复、执行命令、阶段状态与关键决策的连续账本。
+- `v7_recovery_smoke.md`：V7 最低限度环境、代码和数值 smoke 结果（完成后生成）。
+- `v7_data_recovery.md`：Formal 数据恢复、计数、哈希和偏差解释（完成后生成）。
+- `v7_final_decision.md`：V7 最终科研判定（完成后生成）。
 - 后续新增 `opportunity_report.json/.csv` 与 `opportunity_examples.jsonl`：V5 第一生死 Gate；当前尚未生成。
 - `实验环境记录.md`：RTX 3090、关键依赖和 Qwen3-0.6B 模型版本。
 - `冒烟与小样本过拟合结果.md`：真实 GPU 冒烟测试与 8 条样本过拟合结果。

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import Dict, List, Sequence, Tuple
+from collections.abc import Sequence
 
 import torch
 import torch.nn.functional as F
@@ -21,13 +21,13 @@ def sequence_score(
     if not math.isfinite(alpha) or alpha < 0:
         raise ValueError("alpha must be finite and non-negative")
     length = len(token_logprobs)
-    return sum(token_logprobs) / (length ** alpha)
+    return sum(token_logprobs) / (length**alpha)
 
 
 def candidate_probabilities(
     scores: Sequence[float],
     temperature: float = 1.0,
-) -> List[float]:
+) -> list[float]:
     """Softmax over candidate sequence scores."""
     if len(scores) == 0:
         return []
@@ -50,7 +50,7 @@ def aggregate_class_probabilities(
     candidate_probs: Sequence[float],
     class_labels: Sequence[VerifierClass],
     classes: Sequence[VerifierClass] = PRIMARY_CLASSES,
-) -> Dict[VerifierClass, float]:
+) -> dict[VerifierClass, float]:
     """
     q(e|x) = sum_{y_i: g(y_i)=e} pi(y_i|x).
 
@@ -125,15 +125,13 @@ def decompose_candidate_kl(
     candidate_probs_student: Sequence[float],
     class_labels: Sequence[VerifierClass],
     classes: Sequence[VerifierClass] = PRIMARY_CLASSES,
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
     """
     Decompose KL(pi_T || pi_S) into inter-class + intra-class (PRD §1.7).
 
     Returns (kl_candidate, kl_inter, kl_intra).
     """
-    if not (
-        len(candidate_probs_teacher) == len(candidate_probs_student) == len(class_labels)
-    ):
+    if not (len(candidate_probs_teacher) == len(candidate_probs_student) == len(class_labels)):
         raise ValueError("teacher probs, student probs, and labels must have the same length")
 
     allowed = set(classes)
@@ -161,8 +159,8 @@ def decompose_candidate_kl(
         q_t_e = q_t[cls]
         if q_t_e <= 1e-12:
             continue
-        teacher_cond: List[float] = []
-        student_cond: List[float] = []
+        teacher_cond: list[float] = []
+        student_cond: list[float] = []
         for prob_t, prob_s, label in zip(teacher, student, known_labels):
             if label != cls:
                 continue
@@ -183,6 +181,60 @@ def decompose_candidate_kl(
         student,
     )
     return kl_cand, kl_inter, kl_intra
+
+
+def decompose_kl_by_class_ids(
+    candidate_probs_teacher: Sequence[float],
+    candidate_probs_student: Sequence[float],
+    class_ids: Sequence[str],
+) -> tuple[float, float, float]:
+    """Decompose candidate KL for arbitrary functional-class signatures.
+
+    V7 classes are canonical full-call signatures rather than the legacy coarse
+    verifier labels.  The returned tuple is (candidate, inter-class, intra-class).
+    """
+    if not (len(candidate_probs_teacher) == len(candidate_probs_student) == len(class_ids)):
+        raise ValueError("teacher probs, student probs, and class_ids must align")
+    if not class_ids:
+        raise ValueError("at least one candidate is required")
+    for probs in (candidate_probs_teacher, candidate_probs_student):
+        if not all(math.isfinite(value) and value >= 0 for value in probs):
+            raise ValueError("probabilities must be finite and non-negative")
+        if sum(probs) <= 0:
+            raise ValueError("each distribution must have positive mass")
+
+    teacher_total = sum(candidate_probs_teacher)
+    student_total = sum(candidate_probs_student)
+    teacher = [value / teacher_total for value in candidate_probs_teacher]
+    student = [value / student_total for value in candidate_probs_student]
+
+    classes = list(dict.fromkeys(class_ids))
+    q_teacher = [
+        sum(teacher[i] for i, cid in enumerate(class_ids) if cid == cls) for cls in classes
+    ]
+    q_student = [
+        sum(student[i] for i, cid in enumerate(class_ids) if cid == cls) for cls in classes
+    ]
+    inter = kl_divergence(q_teacher, q_student)
+
+    intra = 0.0
+    for cls, class_mass_teacher, class_mass_student in zip(
+        classes, q_teacher, q_student, strict=True
+    ):
+        if class_mass_teacher <= 0:
+            continue
+        if class_mass_student <= 0:
+            raise ValueError("student assigns zero mass to a teacher-supported class")
+        indices = [index for index, cid in enumerate(class_ids) if cid == cls]
+        conditional_teacher = [teacher[index] / class_mass_teacher for index in indices]
+        conditional_student = [student[index] / class_mass_student for index in indices]
+        intra += class_mass_teacher * kl_divergence(
+            conditional_teacher,
+            conditional_student,
+        )
+
+    candidate = kl_divergence(teacher, student)
+    return candidate, inter, intra
 
 
 def torch_kl_div(

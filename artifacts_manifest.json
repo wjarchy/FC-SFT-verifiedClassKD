@@ -1,0 +1,19 @@
+{
+  "manifest_version": 1,
+  "project": "FC-SFT-verifiedClassKD",
+  "phase": "v7_recovery",
+  "status": "in_progress",
+  "created_at_utc": "2026-09-24",
+  "baseline_git_sha": "07d72d62cb6a880388412382308567398e230256",
+  "branch": "recovery/v7-rescue",
+  "hf_home": "/root/autodl-tmp/hf_cache",
+  "source_revisions": {
+    "xlam": "26d14ebfe18b1f7b524bd39b404b50af5dc97866",
+    "toolace_cleaned": "74befe8a24c760ccad2b5d58bcf35d89b3bbd2be",
+    "toolace_schema": "6bda777c88d21e5a204703c1ee45597a8fa4f734",
+    "bfcl": "6ea57973c7a6097fd7c5915698c54c17c5b1b6c8",
+    "student": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "teacher": null
+  },
+  "artifacts": []
+}
