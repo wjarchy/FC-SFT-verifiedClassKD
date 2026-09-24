@@ -84,3 +84,18 @@
 1. 生成 Teacher 与 S0 在 Equiv-All / Internal-Equiv K=4 support 上的固定分数 cache。
 2. 在查看恢复基线 outcome 前，用 Equiv-All 分布冻结 confidence / entropy tertile。
 3. 恢复 Balanced-336×1 Candidate/Class 模型和逐样本预测。
+
+## 2026-09-24：Teacher K=4 cache 恢复完成
+
+- Qwen3-8B BF16 在冻结 K=4 support 上用 tau=2、alpha=1 评分；Equiv-All 1,393 行与 Internal-Equiv 248 行均完整。
+- 首次 candidate batch 4 在第 173 个长样本因完整词表 log-softmax OOM；异常 fallback 因 traceback 持有显存而不能可靠回收。172 行 partial 已移至 /tmp 诊断目录，不进入正式结果。
+- scorer 改为显式、写入 run signature 的 candidate micro-batch；90 项测试通过。正式 cache 从零以统一 batch 2 重算，未混用两种数值路径，峰值显存 21,595.4 MiB。
+- 概率完整性检查通过：每行 4 个 candidate probability 与 3 个 class probability 均有限且和为 1；normalized intra-class entropy 全部位于 [0,1]。
+- sanity：Teacher 正确功能类在 Equiv-All 和 Internal-Equiv 均为 100% class argmax；这里只记录顺手得到的历史 Gate 一致性，不把它设成新阻塞 Gate。
+- Equiv-All 正确类概率 min/median/max 为 0.5241/0.6982/0.8618；normalized intra-class entropy median 为 0.9758，仍保留相对三分位差异。
+- 完整报告：[v7_teacher_cache_recovery.md](v7_teacher_cache_recovery.md)；manifest 与两个大型 JSONL 的 SHA256 已写入根 [artifacts_manifest.json](../artifacts_manifest.json)。
+
+### 下一步
+
+1. 用 selected S0 对同一 Equiv-All / Internal-Equiv support 评分。
+2. 由 Equiv-All 分布冻结 S0 confidence 和 Teacher entropy tertile 后，才评测恢复的 KD 基线 outcome。

@@ -98,6 +98,22 @@
       "training_command": "PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/train_sft.py --config v7_rtx3090 --model /root/autodl-tmp/models/Qwen3-1.7B --model-revision 70d244cc86ccca08cf5af4e1e306ecf908b1ad5e --train-path data/processed/v7/train.jsonl --val-path data/processed/v7/validation.jsonl --data-manifest data/processed/v7/manifest.json --output outputs/v7_formal_s0_seed42 --epochs 3 --micro-batch-size 1 --gradient-accumulation 16 --learning-rate 0.0002 --seed 42 --resume auto",
       "prediction_command": "PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/generate_s0_predictions.py --config v7_rtx3090 --s0-dir outputs/v7_formal_s0_seed42 --output-dir data/candidates/v7/s0_predictions --split-paths internal=data/processed/v7/internal.jsonl --max-new-tokens 192 --resume auto",
       "large_files_git_ignored": true
+    },
+    {
+      "name": "v7_teacher_fixed_support_cache",
+      "status": "complete",
+      "manifest": "data/cache/v7/teacher/manifest.json",
+      "manifest_sha256": "7c16f7777c649a3710dfeacf97af77a8c56bf8479b73eea799d716b0a4b93c43",
+      "teacher_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "pool_manifest_sha256": "4dae3a369f4de6150de29157cbdd7024b51eaab90744a6d08024a3cb6861874d",
+      "temperature": 2.0,
+      "alpha": 1.0,
+      "candidate_batch_size": 2,
+      "equiv_all_scores": "data/cache/v7/teacher/teacher_equiv_all_scores.jsonl",
+      "equiv_all_scores_sha256": "124c3e7abd70fbea67bd3772550fd696dd6a55cb20829ba48270906e6c48d06c",
+      "internal_equiv_scores": "data/cache/v7/teacher/teacher_internal_equiv_scores.jsonl",
+      "internal_equiv_scores_sha256": "ee5e5bd4f9c23b1daf90b0427c8ad68375c600facb821bd81b08efc81a05b2b9",
+      "large_files_git_ignored": true
     }
   ]
 }

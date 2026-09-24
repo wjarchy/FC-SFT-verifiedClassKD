@@ -1,0 +1,87 @@
+{
+  "manifest_version": 1,
+  "created_at_utc": "2026-09-24T09:53:38.487050+00:00",
+  "status": "complete",
+  "run_signature": "f79d4cdebf1072ba4fc65eb17231e35bd79b7145c1dc655ff83a58e4805d11fc",
+  "definition": {
+    "kind": "teacher",
+    "model_path": "/root/autodl-tmp/models/Qwen3-8B",
+    "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "adapter": null,
+    "adapter_sha256": null,
+    "load_in_4bit": false,
+    "pool_manifest": "data/candidates/v7/manifest.json",
+    "pool_manifest_sha256": "4dae3a369f4de6150de29157cbdd7024b51eaab90744a6d08024a3cb6861874d",
+    "splits": [
+      "equiv_all",
+      "internal_equiv"
+    ],
+    "alpha": 1.0,
+    "temperature": 2.0,
+    "max_length": 2560,
+    "candidate_batch_size": 2
+  },
+  "command": [
+    "scripts/v7_score_fixed_support.py",
+    "--config",
+    "v7_rtx3090",
+    "--kind",
+    "teacher",
+    "--model",
+    "/root/autodl-tmp/models/Qwen3-8B",
+    "--model-revision",
+    "b968826d9c46dd6066d109eabc6255188de91218",
+    "--pool-manifest",
+    "data/candidates/v7/manifest.json",
+    "--splits",
+    "equiv_all",
+    "internal_equiv",
+    "--output-dir",
+    "data/cache/v7/teacher",
+    "--temperature",
+    "2",
+    "--alpha",
+    "1",
+    "--max-length",
+    "2560",
+    "--candidate-batch-size",
+    "2",
+    "--resume",
+    "auto"
+  ],
+  "git": {
+    "commit": "33cd0fc725ed75980f357c752a0c767acdb14df3",
+    "dirty": false
+  },
+  "environment": {
+    "python": "3.11.16",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "gpu": "NVIDIA GeForce RTX 3090"
+  },
+  "artifacts": {
+    "equiv_all": {
+      "status": "complete",
+      "rows": 1393,
+      "data_path": "data/processed/v7/equiv_all.jsonl",
+      "data_sha256": "7b21fe7d584443f87f09572f78ba849ef34d075a257006052894f1ab094f82d0",
+      "pool_path": "data/candidates/v7/equiv_all_k4.jsonl",
+      "pool_sha256": "26b42b53a5e270c2b216805eca15bec96ab4f498c489e9868355678eae67ce1f",
+      "output_path": "data/cache/v7/teacher/teacher_equiv_all_scores.jsonl",
+      "output_sha256": "124c3e7abd70fbea67bd3772550fd696dd6a55cb20829ba48270906e6c48d06c"
+    },
+    "internal_equiv": {
+      "status": "complete",
+      "rows": 248,
+      "data_path": "data/processed/v7/internal_equiv.jsonl",
+      "data_sha256": "091a29c294ca8102ada9f896468b0cb2d0ad3b6c302884e2003beaea9ca3ffd2",
+      "pool_path": "data/candidates/v7/internal_equiv_k4.jsonl",
+      "pool_sha256": "12d71c17021f5542a25931bc44a858405355220bfc2d62b839c5f3babfa79ad7",
+      "output_path": "data/cache/v7/teacher/teacher_internal_equiv_scores.jsonl",
+      "output_sha256": "ee5e5bd4f9c23b1daf90b0427c8ad68375c600facb821bd81b08efc81a05b2b9"
+    }
+  },
+  "peak_gpu_memory_mb": 21595.4228515625,
+  "updated_at_utc": "2026-09-24T10:15:25.132239+00:00",
+  "completed_at_utc": "2026-09-24T10:15:25.135382+00:00"
+}

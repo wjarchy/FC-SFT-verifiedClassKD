@@ -9,6 +9,7 @@
 - `v7_recovery_smoke.md`：V7 最低限度环境、代码和数值 smoke 结果（完成后生成）。
 - `v7_data_recovery.md`：Formal 数据恢复、计数、哈希和偏差解释（完成后生成）。
 - `v7_s0_recovery.md`：Formal S0 重训、Validation 选模、Internal 预测与资产哈希。
+- `v7_teacher_cache_recovery.md`：固定 K=4 Teacher 概率、entropy 与缓存哈希。
 - `v7_final_decision.md`：V7 最终科研判定（完成后生成）。
 - 后续新增 `opportunity_report.json/.csv` 与 `opportunity_examples.jsonl`：V5 第一生死 Gate；当前尚未生成。
 - `实验环境记录.md`：RTX 3090、关键依赖和 Qwen3-0.6B 模型版本。
