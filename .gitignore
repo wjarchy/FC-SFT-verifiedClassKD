@@ -44,6 +44,14 @@ data/candidates/v7/*
 data/cache/**
 !data/cache/.gitkeep
 !data/cache/README.md
+!data/cache/v7/
+data/cache/v7/*
+!data/cache/v7/teacher/
+data/cache/v7/teacher/*
+!data/cache/v7/teacher/manifest.json
+!data/cache/v7/s0/
+data/cache/v7/s0/*
+!data/cache/v7/s0/manifest.json
 
 # Model outputs
 outputs/**
