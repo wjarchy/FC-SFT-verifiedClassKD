@@ -19,7 +19,7 @@
 - `v7_teacher_entropy_analysis.md`：按训练侧预冻结 Teacher 类内 entropy 三分位的机制分析。
 - `v7_discordant_cases.md`：三个 setting 中 Candidate-only / Class-only 正确样本的无筛选汇总。
 - `v7_gradient_analysis.md`：Formal S0 上预定义 16 条 optimizer group 的梯度机制诊断（完成后生成）。
-- `v7阶段审查检查点.md`：Scaling 完成、Gradient 尚未完成时供用户审查的详细暂停快照。
+- `v7阶段审查检查点.md`：数据规模对比完成、训练信号分析尚未完成时，供用户审查的通俗中文暂停报告。
 - `v7_final_decision.md`：V7 最终科研判定（完成后生成）。
 - 后续新增 `opportunity_report.json/.csv` 与 `opportunity_examples.jsonl`：V5 第一生死 Gate；当前尚未生成。
 - `实验环境记录.md`：RTX 3090、关键依赖和 Qwen3-0.6B 模型版本。
