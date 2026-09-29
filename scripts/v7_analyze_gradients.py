@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import hashlib
 import json
 import os
@@ -266,6 +267,7 @@ def main() -> int:
             inter_grads,
             intra_grads,
         )
+        gc.collect()
         torch.cuda.empty_cache()
         print(f"gradient diagnostic: {position}/{len(indices)} {record.id}", flush=True)
 
