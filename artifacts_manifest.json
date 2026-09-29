@@ -334,12 +334,13 @@
     },
     {
       "name": "v7_gradient_analysis_definition",
-      "status": "preregistered_pending_execution",
+      "status": "preregistered_pending_execution_after_memory_fix",
       "trigger": "PRD case A: Balanced-336×1 Class Full regression largely shrinks at ×4 but Class does not win",
       "script": "scripts/v7_analyze_gradients.py",
-      "script_sha256": "51f4301e287af9d1e07c8948ab2d3fc811f625ec099834668eccc9c49e94e469",
+      "script_sha256": "e73192cff8226bdeebe826e268d9127903ac1befdf8e33b733ac8b90a52f0840",
       "helper_sha256": "2455b76a4e112522bbd49c02192a1aef2f8711873f763a7118175085a167802b",
       "definition": "Formal S0; Balanced-336; first optimizer group from epoch 0; subset_size=16; seed=42; tau=2; alpha=1; max_length=2560; eval mode",
+      "engineering_note": "first attempt stopped before writing outputs at sample 7 with CUDA allocator OOM; gradients are now copied to CPU and CUDA cache released after every sample; scientific definition unchanged",
       "command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_analyze_gradients.py"
     }
   ]

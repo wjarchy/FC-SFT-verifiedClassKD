@@ -101,6 +101,13 @@ def add_gradients(accumulators: list[torch.Tensor], gradients: tuple[Any, ...], 
             accumulator.add_(gradient.detach().float().cpu(), alpha=scale)
 
 
+def cpu_gradients(gradients: tuple[Any, ...]) -> tuple[Any, ...]:
+    """Move diagnostic gradients off GPU without changing their values."""
+    return tuple(
+        None if gradient is None else gradient.detach().float().cpu() for gradient in gradients
+    )
+
+
 def norm_of(gradients: tuple[Any, ...]) -> float:
     squared = 0.0
     for gradient in gradients:
@@ -205,11 +212,19 @@ def main() -> int:
         intra_loss = candidate_loss - class_loss
         if not all(torch.isfinite(value) for value in (candidate_loss, class_loss, intra_loss)):
             raise FloatingPointError(f"non-finite loss for {record.id}")
-        candidate_grads = torch.autograd.grad(
+        candidate_device_grads = torch.autograd.grad(
             candidate_loss, parameters, retain_graph=True, allow_unused=True
         )
-        inter_grads = torch.autograd.grad(class_loss, parameters, retain_graph=True, allow_unused=True)
-        intra_grads = torch.autograd.grad(intra_loss, parameters, allow_unused=True)
+        candidate_grads = cpu_gradients(candidate_device_grads)
+        del candidate_device_grads
+        inter_device_grads = torch.autograd.grad(
+            class_loss, parameters, retain_graph=True, allow_unused=True
+        )
+        inter_grads = cpu_gradients(inter_device_grads)
+        del inter_device_grads
+        intra_device_grads = torch.autograd.grad(intra_loss, parameters, allow_unused=True)
+        intra_grads = cpu_gradients(intra_device_grads)
+        del intra_device_grads
         add_gradients(candidate_sum, candidate_grads, scale)
         add_gradients(inter_sum, inter_grads, scale)
         add_gradients(intra_sum, intra_grads, scale)
@@ -241,6 +256,17 @@ def main() -> int:
                 ),
             }
         )
+        del (
+            scores,
+            teacher,
+            candidate_loss,
+            class_loss,
+            intra_loss,
+            candidate_grads,
+            inter_grads,
+            intra_grads,
+        )
+        torch.cuda.empty_cache()
         print(f"gradient diagnostic: {position}/{len(indices)} {record.id}", flush=True)
 
     geometry = gradient_geometry(candidate_sum, inter_sum, intra_sum)

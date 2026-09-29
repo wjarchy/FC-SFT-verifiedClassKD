@@ -152,3 +152,9 @@
 - 在查看任何梯度结果前冻结：Formal S0、Balanced-336、seed 42、epoch 0 的第一个真实 optimizer group（16 条）、tau 2、alpha 1、max length 2,560；eval mode 关闭 dropout。
 - 同一次 forward graph 分别计算 `L_candidate`、`L_inter=L_class` 与 `L_intra=L_candidate-L_class`，报告三者 mean-loss gradient 的范数、inter/intra cosine 与分解残差。
 - 该诊断只解释优化几何，不替代正式 evaluator，也不外推为总体显著性结论；脚本为 `scripts/v7_analyze_gradients.py`，输出为 `v7_gradient_analysis.md/.json`。
+
+### 首次执行的工程修复
+
+- 从已推送的 `bb54bb7` 开始执行；前 6 条只打印进度，没有输出任何梯度数值或正式文件，第 7 条 forward 因 CUDA allocator OOM 退出。
+- 失败样本长度 756 tokens，并不比第 1 条的 778 tokens 更长；GPU 进程退出后显存完全释放，定位为跨样本保留三套诊断梯度和 allocator 碎片，而非数据超长或硬件故障。
+- 修复仅将每套已算出的梯度立即无损转存 CPU，并在每条样本结束后释放临时对象/CUDA cache；样本选择、loss、forward graph、模型 mode 和报告量均不变。正式结果从第 1 条重新计算，不混用首次 partial。
