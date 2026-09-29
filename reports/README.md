@@ -11,6 +11,7 @@
 - `v7_s0_recovery.md`：Formal S0 重训、Validation 选模、Internal 预测与资产哈希。
 - `v7_teacher_cache_recovery.md`：固定 K=4 Teacher 概率、entropy 与缓存哈希。
 - `v7_analysis_threshold_freeze.md`：在 KD outcome 前冻结的 S0 confidence / Teacher entropy 三分位。
+- `v7_s0_difficulty_analysis.md`：Balanced-336×1 的配对 S0 难度、置信度、A/B/C 与 Teacher entropy 分层结果。
 - `v7_shutdown_checkpoint.md`：本次关机前的精确完成边界、哈希与恢复入口。
 - `v7_final_decision.md`：V7 最终科研判定（完成后生成）。
 - 后续新增 `opportunity_report.json/.csv` 与 `opportunity_examples.jsonl`：V5 第一生死 Gate；当前尚未生成。

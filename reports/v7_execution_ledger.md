@@ -123,3 +123,13 @@
 - Candidate 训练已完成但尚未做 Internal free-generation；Balanced-336×1 Class 分支尚未启动，因此当前没有不公平的半对比较，也没有产生 KD outcome。
 - 关机前没有后台 GPU 进程需要保留。下一次从 Class 分支开始，然后依次评测 Candidate/Class 并执行 S0 Difficulty。
 - 精确恢复说明：[v7_shutdown_checkpoint.md](v7_shutdown_checkpoint.md)。
+
+## 2026-09-29：Balanced-336×1 与 S0 Difficulty 完成
+
+- 从已推送检查点恢复后，本地与远端均为 `dfe86e3`，90 项测试通过；Candidate 未重训。Class 使用同一 S0、数据、K=4、Teacher cache、seed 与超参完成 336 exposures / 21 steps，最终 adapter SHA256 为 `727363c99f26be5b6b38e9971414dd045d0ae727cecca1855ea408feedf8bbb7`。
+- 冻结的 batch=4 贪心评测结果：Full Internal 上 Candidate 为 360/500（72.00%），Class 为 306/500（61.20%）；Internal-Equiv 上分别为 156/248（62.90%）与 151/248（60.89%）；Internal-Singleton 上分别为 204/252（80.95%）与 155/252（61.51%）。
+- Internal-Equiv 的 Class-Candidate delta 为 -2.02pt，配对 bootstrap 95% CI [-5.24pt, 0.81pt]，McNemar exact p=0.3018。Full 的 -10.80pt 主要来自 singleton 的 -19.44pt；Class 的 invalid 多为 `arguments` 退化为 scalar/list，而非截断或乱码。
+- S0 Correct/Wrong delta 分别为 -2.27pt/-1.39pt；S0 confidence 从 high/mid/low 依次为 -2.47pt/-1.09pt/-2.67pt，不满足“难度越高 Class 相对越好”的单调趋势。当前 Weak-S0 条件不受支持，待 scaling 后按 PRD 正式记为 `SKIPPED`。
+- 历史 78.23%/77.02% 不能作为逐样本复现目标：灾后 Formal cohort 仅按 revision、规则与聚合控制数重建，旧机器未保存最终 ID。为隔离另一个口径差异，用逐字节相同的 step-0 S0 在 batch=4 上诊断 Internal-Equiv，得到 169/248（68.15%），低于原 batch=1 的 176/248（70.97%）；batching 解释 2.82pt，但不足以解释全部 KD 负迁移。
+- 实现审计确认 step-0 adapter 与 selected S0 SHA256 完全一致，pool 顺序固定为 `[Gold, Equivalent, WrongArg, WrongFn]`、class index 为 `[0,0,1,2]`，Class loss 是正确的聚合 KL；未发现可归因于错误权重、cache 错配、随机解码或 parser 的污染。
+- 正式报告：[v7_s0_difficulty_analysis.md](v7_s0_difficulty_analysis.md)。训练、预测、诊断与报告路径/哈希已写入根 [artifacts_manifest.json](../artifacts_manifest.json)。下一步严格执行冻结矩阵的 Balanced-336×4 与 Equiv-All-1393×1。
