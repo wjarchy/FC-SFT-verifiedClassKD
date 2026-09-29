@@ -133,3 +133,22 @@
 - 历史 78.23%/77.02% 不能作为逐样本复现目标：灾后 Formal cohort 仅按 revision、规则与聚合控制数重建，旧机器未保存最终 ID。为隔离另一个口径差异，用逐字节相同的 step-0 S0 在 batch=4 上诊断 Internal-Equiv，得到 169/248（68.15%），低于原 batch=1 的 176/248（70.97%）；batching 解释 2.82pt，但不足以解释全部 KD 负迁移。
 - 实现审计确认 step-0 adapter 与 selected S0 SHA256 完全一致，pool 顺序固定为 `[Gold, Equivalent, WrongArg, WrongFn]`、class index 为 `[0,0,1,2]`，Class loss 是正确的聚合 KL；未发现可归因于错误权重、cache 错配、随机解码或 parser 的污染。
 - 正式报告：[v7_s0_difficulty_analysis.md](v7_s0_difficulty_analysis.md)。训练、预测、诊断与报告路径/哈希已写入根 [artifacts_manifest.json](../artifacts_manifest.json)。下一步严格执行冻结矩阵的 Balanced-336×4 与 Equiv-All-1393×1。
+
+## 2026-09-29：Scaling / Diversity、Entropy 与 Discordant Cases 完成
+
+- 冻结矩阵全部完成：Balanced-336×4 的每支 1,344 exposures / 84 steps；Equiv-All-1393×1 的每支 1,393 exposures / 88 steps。四支均从同一 Formal S0 出发，使用同一 K=4 定义、Teacher cache、seed 42、LR 2e-4、tau 2、batch 16 和 max length 2,560。
+- Balanced-336×4：Full Candidate/Class 为 363/500（72.60%）/355/500（71.00%），delta -1.60pt，95% CI [-4.00pt, 0.80pt]；Internal-Equiv 为 160/248（64.52%）/159/248（64.11%），delta -0.40pt，95% CI [-3.63pt, 2.82pt]。
+- Equiv-All-1393×1：Full 为 359/500（71.80%）/371/500（74.20%），delta +2.40pt，95% CI [-0.20pt, 5.20pt]，McNemar p=0.1038；Internal-Equiv 为 153/248（61.69%）/162/248（65.32%），delta +3.63pt，95% CI [-0.81pt, 8.06pt]，McNemar p=0.1496。
+- Balanced-336 从 1 轮重复到 4 轮仅把目标 delta 从 -2.02pt 改善到 -0.40pt；近似相同 exposure 下，Equiv-All 的 delta 比 Balanced×4 高 4.03pt。结果支持“更多 unique query 与自然 A/B/C 分布”的组合条件优于只重复小集合，但两因素同时变化，不能进一步作因果拆分。
+- 独立复核确认六个 prediction 文件各 500 行、ID 唯一且与 Internal 顺序逐项一致；三组 Full/Equiv correct counts 和 candidate-only/class-only 配对数均与报告一致。
+- Teacher entropy 在 Equiv-All 的 low/mid/high delta 为 +4.12/+4.48/+2.38pt，没有随 entropy 上升而增强；Balanced×4 方向也不一致。因此 entropy 机制不受支持。
+- Equiv-All 的 S0 confidence high/mid/low delta 为 0.00/+4.35/+6.67pt，但 S0 free-generation Correct/Wrong 为 +6.25/-2.78pt。difficulty 仅部分支持，未达到 Weak-S0 的明确触发条件；按 PRD 正式记为 `Weak-S0 SKIPPED`，不为寻找正结果追加训练。
+- Discordant case 不做胜例筛选：三个 setting 的 Candidate-only/Class-only 分别为 10/5、9/8、11/20，共保存 63 行完整上下文。
+- 单 seed 且 Equiv-All 两个主区间均跨 0，因此当前是条件性、方向一致的 rescue 信号，不是 universal superiority 证据。
+
+## 2026-09-29：Gradient Analysis 定义冻结
+
+- PRD 情况 A 被触发：Balanced-336×1 的 Class Full 明显退化，×4 后差距缩小但仍未胜出；执行最小梯度诊断以检查类内项带来的 signal strength / direction。
+- 在查看任何梯度结果前冻结：Formal S0、Balanced-336、seed 42、epoch 0 的第一个真实 optimizer group（16 条）、tau 2、alpha 1、max length 2,560；eval mode 关闭 dropout。
+- 同一次 forward graph 分别计算 `L_candidate`、`L_inter=L_class` 与 `L_intra=L_candidate-L_class`，报告三者 mean-loss gradient 的范数、inter/intra cosine 与分解残差。
+- 该诊断只解释优化几何，不替代正式 evaluator，也不外推为总体显著性结论；脚本为 `scripts/v7_analyze_gradients.py`，输出为 `v7_gradient_analysis.md/.json`。

@@ -13,6 +13,12 @@
 - `v7_analysis_threshold_freeze.md`：在 KD outcome 前冻结的 S0 confidence / Teacher entropy 三分位。
 - `v7_s0_difficulty_analysis.md`：Balanced-336×1 的配对 S0 难度、置信度、A/B/C 与 Teacher entropy 分层结果。
 - `v7_shutdown_checkpoint.md`：本次关机前的精确完成边界、哈希与恢复入口。
+- `v7_balanced336_e4_analysis.md`：Balanced-336×4 Candidate/Class 的主指标与预注册分层。
+- `v7_equiv_all_e1_analysis.md`：Equiv-All-1393×1 Candidate/Class 的主指标与预注册分层。
+- `v7_scaling_report.md`：336×1、336×4 与 Equiv-All×1 的 exposure / unique diversity 主比较。
+- `v7_teacher_entropy_analysis.md`：按训练侧预冻结 Teacher 类内 entropy 三分位的机制分析。
+- `v7_discordant_cases.md`：三个 setting 中 Candidate-only / Class-only 正确样本的无筛选汇总。
+- `v7_gradient_analysis.md`：Formal S0 上预定义 16 条 optimizer group 的梯度机制诊断（完成后生成）。
 - `v7_final_decision.md`：V7 最终科研判定（完成后生成）。
 - 后续新增 `opportunity_report.json/.csv` 与 `opportunity_examples.jsonl`：V5 第一生死 Gate；当前尚未生成。
 - `实验环境记录.md`：RTX 3090、关键依赖和 Qwen3-0.6B 模型版本。

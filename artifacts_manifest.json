@@ -234,6 +234,113 @@
       "purpose": "isolate historical batch-1 versus frozen V7 batch-4 evaluation drift",
       "generation_command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_generate_adapter_predictions.py --config v7_rtx3090 --adapter outputs/v7_kd/balanced336_e1_candidate/checkpoint-step-000000/adapter --run-name s0_batch4_diagnostic --split-name internal_equiv --split-path data/processed/v7/internal_equiv.jsonl --output-dir outputs/v7_diagnostics --batch-size 4 --max-new-tokens 192 --resume auto",
       "large_files_git_ignored": true
+    },
+    {
+      "name": "v7_balanced336_e4_pair",
+      "status": "complete",
+      "git_sha_at_run": "e3fc2e09143decc75ff7c6d4f88cd3695d03c9a1",
+      "student_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+      "s0_adapter_sha256": "6bb07558d42735f32ae1676fc3eaae64c786523f8bb55bb4078a90b9ef06d2d5",
+      "data": "data/processed/v7/balanced_336.jsonl",
+      "data_sha256": "aee4fa587b609a0c336aa43cb524678b7cfc6d52e40fb2ec1ee93b16146e9ed0",
+      "pool_sha256": "1d0e7e8ffcb5477e6017f33c1a41cd142d15faf1d7316ba073cbc26411787d72",
+      "teacher_cache_sha256": "124c3e7abd70fbea67bd3772550fd696dd6a55cb20829ba48270906e6c48d06c",
+      "epochs": 4,
+      "sample_exposures": 1344,
+      "optimizer_steps": 84,
+      "candidate": {
+        "path": "outputs/v7_kd/balanced336_e4_candidate",
+        "final_adapter_sha256": "ba603ae0d23508165c176cca0cfc0254d5d88e86ce6f9470883d9e5c3c46de79",
+        "run_manifest_sha256": "6878f34e41df44f44263ad9194a9a2dd11f00d219547a8e32a5b8aa9ecb9b1e3",
+        "training_summary_sha256": "f650e129d06abdd4a4b098461c8c6d47887935d8e9d601bbdc8d60736abe3412",
+        "training_log_sha256": "116b388bc9fc8e21a1364343c0ab0c56e8e20d73d3129fbc1795e544f46ad8ff",
+        "predictions_sha256": "57bc51b451100044e742212085b703954195216a2b5eabf10141ccc56dd1e402",
+        "prediction_manifest_sha256": "e242832e9f4ff64bcd3324462246ea08e11d1866c382e50da6d86d69a454ea11",
+        "training_command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_train_kd.py --config v7_rtx3090 --objective candidate --data-path data/processed/v7/balanced_336.jsonl --pool-path data/candidates/v7/balanced_336_k4.jsonl --teacher-cache data/cache/v7/teacher/teacher_equiv_all_scores.jsonl --s0-dir outputs/v7_formal_s0_seed42 --output outputs/v7_kd/balanced336_e4_candidate --epochs 4 --batch-size 16 --learning-rate 0.0002 --temperature 2 --loss-weight 1 --alpha 1 --max-length 2560 --seed 42 --resume auto",
+        "prediction_command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_generate_adapter_predictions.py --config v7_rtx3090 --adapter outputs/v7_kd/balanced336_e4_candidate/checkpoint-step-000084/adapter --run-name balanced336_e4_candidate --split-name internal --split-path data/processed/v7/internal.jsonl --output-dir outputs/v7_predictions --batch-size 4 --max-new-tokens 192 --resume auto"
+      },
+      "class": {
+        "path": "outputs/v7_kd/balanced336_e4_class",
+        "final_adapter_sha256": "1affe9dd853190ede217e9eaf4e8c0d229c3cc7adaf305dca063b57ac424bb80",
+        "run_manifest_sha256": "c206d09b945244f9ed772c510733992df10908285deb6950a4cfb8515f57f314",
+        "training_summary_sha256": "a24cd43eec1a9ab3fc63510ea5a905a5aac92ccc30780404d6034fb3d78d016f",
+        "training_log_sha256": "25678df1343bea9e85ad8211b59792287bdd40bb0592dbea5496247c586f25ee",
+        "predictions_sha256": "59bf7078ac8c43eaa691ba19650ce8dd6ef4de14f3cc2da2939822cf7771bcc8",
+        "prediction_manifest_sha256": "281f7a63090145d809a0b5c2b5a8eba68edc2dd8689fd63f5b2fc7a923468c3f",
+        "training_command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_train_kd.py --config v7_rtx3090 --objective class --data-path data/processed/v7/balanced_336.jsonl --pool-path data/candidates/v7/balanced_336_k4.jsonl --teacher-cache data/cache/v7/teacher/teacher_equiv_all_scores.jsonl --s0-dir outputs/v7_formal_s0_seed42 --output outputs/v7_kd/balanced336_e4_class --epochs 4 --batch-size 16 --learning-rate 0.0002 --temperature 2 --loss-weight 1 --alpha 1 --max-length 2560 --seed 42 --resume auto",
+        "prediction_command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_generate_adapter_predictions.py --config v7_rtx3090 --adapter outputs/v7_kd/balanced336_e4_class/checkpoint-step-000084/adapter --run-name balanced336_e4_class --split-name internal --split-path data/processed/v7/internal.jsonl --output-dir outputs/v7_predictions --batch-size 4 --max-new-tokens 192 --resume auto"
+      },
+      "large_files_git_ignored": true
+    },
+    {
+      "name": "v7_equiv_all_e1_pair",
+      "status": "complete",
+      "git_sha_at_run": "e3fc2e09143decc75ff7c6d4f88cd3695d03c9a1",
+      "student_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+      "s0_adapter_sha256": "6bb07558d42735f32ae1676fc3eaae64c786523f8bb55bb4078a90b9ef06d2d5",
+      "data": "data/processed/v7/equiv_all.jsonl",
+      "data_sha256": "7b21fe7d584443f87f09572f78ba849ef34d075a257006052894f1ab094f82d0",
+      "pool_sha256": "26b42b53a5e270c2b216805eca15bec96ab4f498c489e9868355678eae67ce1f",
+      "teacher_cache_sha256": "124c3e7abd70fbea67bd3772550fd696dd6a55cb20829ba48270906e6c48d06c",
+      "epochs": 1,
+      "sample_exposures": 1393,
+      "optimizer_steps": 88,
+      "candidate": {
+        "path": "outputs/v7_kd/equiv_all_e1_candidate",
+        "final_adapter_sha256": "cc70585b621c29310436d27e269024c912a10a59b4f50c898ba75bb422200f4e",
+        "run_manifest_sha256": "04ef1eec7e86f0afc9ebc7f3ec96c6979ff1a5b0801bcf48698d5c0b741f74a9",
+        "training_summary_sha256": "26629170366b61fe756e59a2c3e9ba3a1284e2ab2116c79b191f4a840efacc55",
+        "training_log_sha256": "df52cd73be27975c3785fc722a3a180bc15480cc15054d97309739894617905c",
+        "predictions_sha256": "c3aab832543464f355cd878ea006d3a7006d11ec757929870a2414dcf91f085c",
+        "prediction_manifest_sha256": "e11755cd1d29cd35671f0a770a2f7fe4a4a2bc60638028f6ee6e6af8b004e39e",
+        "training_command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_train_kd.py --config v7_rtx3090 --objective candidate --data-path data/processed/v7/equiv_all.jsonl --pool-path data/candidates/v7/equiv_all_k4.jsonl --teacher-cache data/cache/v7/teacher/teacher_equiv_all_scores.jsonl --s0-dir outputs/v7_formal_s0_seed42 --output outputs/v7_kd/equiv_all_e1_candidate --epochs 1 --batch-size 16 --learning-rate 0.0002 --temperature 2 --loss-weight 1 --alpha 1 --max-length 2560 --seed 42 --resume auto",
+        "prediction_command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_generate_adapter_predictions.py --config v7_rtx3090 --adapter outputs/v7_kd/equiv_all_e1_candidate/checkpoint-step-000088/adapter --run-name equiv_all_e1_candidate --split-name internal --split-path data/processed/v7/internal.jsonl --output-dir outputs/v7_predictions --batch-size 4 --max-new-tokens 192 --resume auto"
+      },
+      "class": {
+        "path": "outputs/v7_kd/equiv_all_e1_class",
+        "final_adapter_sha256": "a7c9d85f7679cedec9d460d6b42e317ab835479eb92c083217b71241335f5eaa",
+        "run_manifest_sha256": "2f2310773d32cb261a11b1344632540e1bbfd0be2599076813ed1dc8ae8a0911",
+        "training_summary_sha256": "33fc5ed1d4aff282b2fb3fad10f58126dde06825a5e85431f4a1cb0425591862",
+        "training_log_sha256": "6288b6dc0726b4ca467a1b9e7546b3c4db43e165e5e0e065b793eada08a1abb8",
+        "predictions_sha256": "d847dcbb8e356b0933db482d002a49744d3f62d51d8dc6a49f82f7bceb1ca082",
+        "prediction_manifest_sha256": "5550d386be093182913cb787e0c09b6171015e0b28e2af72f923687feae8d3f8",
+        "training_command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_train_kd.py --config v7_rtx3090 --objective class --data-path data/processed/v7/equiv_all.jsonl --pool-path data/candidates/v7/equiv_all_k4.jsonl --teacher-cache data/cache/v7/teacher/teacher_equiv_all_scores.jsonl --s0-dir outputs/v7_formal_s0_seed42 --output outputs/v7_kd/equiv_all_e1_class --epochs 1 --batch-size 16 --learning-rate 0.0002 --temperature 2 --loss-weight 1 --alpha 1 --max-length 2560 --seed 42 --resume auto",
+        "prediction_command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_generate_adapter_predictions.py --config v7_rtx3090 --adapter outputs/v7_kd/equiv_all_e1_class/checkpoint-step-000088/adapter --run-name equiv_all_e1_class --split-name internal --split-path data/processed/v7/internal.jsonl --output-dir outputs/v7_predictions --batch-size 4 --max-new-tokens 192 --resume auto"
+      },
+      "large_files_git_ignored": true
+    },
+    {
+      "name": "v7_scaling_entropy_discordant_analysis",
+      "status": "complete",
+      "reports": {
+        "balanced336_e4": "86a83b4f9a3fd32f0b94783a84bf03291d901eea8b80d152a1de75dd843e2435",
+        "balanced336_e4_summary": "dac95c36458cad62938e32cf9e2b717cce4d7f8b37502cec69dc9599193ad507",
+        "balanced336_e4_samples_jsonl": "345d126b42411d948c8029a743ac576b421632ab8ac71e072b3ed4b7c18bd3b3",
+        "equiv_all_e1": "133d4e1a8862a2c54ad6ee68bd0831b06a9a8e7192f86b6962656a757b7aa67f",
+        "equiv_all_e1_summary": "77592220ec9ff9229a9020c75f81f4e523ffcaca089a7aaf68c29450215c5664",
+        "equiv_all_e1_samples_jsonl": "493bd342b7be7f9ee6c26cc3d4a07c141407d91b07a579e2d43138aff9909015",
+        "scaling": "4d7769346d84aecc1c790acbbac57ac61b70cd8671031890290c848b7542c2b4",
+        "scaling_summary": "9d707c6416aeaa22a16f87f629605b8e5793100b0acc1b98c3f30e6cdf5932ae",
+        "teacher_entropy": "96d6ceb0aebad0f5f4f0e46dba16e337fc539ccb38af674425125534b4d33aa5",
+        "discordant_markdown": "6728d9df481b36ade6e4720734a34b4cd18ea9bde70f3d715126aac18d15b6e7",
+        "discordant_jsonl": "294fd5094abea90d333466b8a1040240557d91d116668c719f02b52f31d5b15b"
+      },
+      "analysis_commands": [
+        "PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_analyze_s0_difficulty.py --candidate-predictions outputs/v7_predictions/balanced336_e4_candidate_internal_predictions.jsonl --class-predictions outputs/v7_predictions/balanced336_e4_class_internal_predictions.jsonl --report reports/v7_balanced336_e4_analysis.md --summary reports/v7_balanced336_e4_summary.json --samples reports/v7_balanced336_e4_samples.jsonl",
+        "PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_analyze_s0_difficulty.py --candidate-predictions outputs/v7_predictions/equiv_all_e1_candidate_internal_predictions.jsonl --class-predictions outputs/v7_predictions/equiv_all_e1_class_internal_predictions.jsonl --report reports/v7_equiv_all_e1_analysis.md --summary reports/v7_equiv_all_e1_summary.json --samples reports/v7_equiv_all_e1_samples.jsonl",
+        "PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_build_scaling_report.py",
+        "PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_build_discordant_cases.py --pair balanced336_e1=outputs/v7_predictions/balanced336_e1_candidate_internal_predictions.jsonl,outputs/v7_predictions/balanced336_e1_class_internal_predictions.jsonl --pair balanced336_e4=outputs/v7_predictions/balanced336_e4_candidate_internal_predictions.jsonl,outputs/v7_predictions/balanced336_e4_class_internal_predictions.jsonl --pair equiv_all_e1=outputs/v7_predictions/equiv_all_e1_candidate_internal_predictions.jsonl,outputs/v7_predictions/equiv_all_e1_class_internal_predictions.jsonl"
+      ]
+    },
+    {
+      "name": "v7_gradient_analysis_definition",
+      "status": "preregistered_pending_execution",
+      "trigger": "PRD case A: Balanced-336×1 Class Full regression largely shrinks at ×4 but Class does not win",
+      "script": "scripts/v7_analyze_gradients.py",
+      "script_sha256": "51f4301e287af9d1e07c8948ab2d3fc811f625ec099834668eccc9c49e94e469",
+      "helper_sha256": "2455b76a4e112522bbd49c02192a1aef2f8711873f763a7118175085a167802b",
+      "definition": "Formal S0; Balanced-336; first optimizer group from epoch 0; subset_size=16; seed=42; tau=2; alpha=1; max_length=2560; eval mode",
+      "command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_analyze_gradients.py"
     }
   ]
 }

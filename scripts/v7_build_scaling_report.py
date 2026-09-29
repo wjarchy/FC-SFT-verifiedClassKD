@@ -179,6 +179,14 @@ def main() -> int:
 
 {grouped_table(summaries, "equivalence_type", ["A", "B", "C"], "等价类型")}
 
+## 科研判断
+
+- Balanced-336 从 1 轮增加到 4 轮后，Internal-Equiv 的 Class-Candidate delta 从 -2.02pt 改善到 -0.40pt，但仍未转为 Class 优势；近似相同 exposure 下，Equiv-All-1393×1 的 delta 为 +3.63pt。
+- Equiv-All 的目标 subset 提升为 9/248，paired bootstrap 95% CI [-0.81pt, 8.06pt]，McNemar exact p=0.1496；Full Internal 同时为 +2.40pt，95% CI [-0.20pt, 5.20pt]，没有观察到明显整体退化。
+- 证据方向支持“更多 unique query 与自然 A/B/C 分布”的组合条件比重复小集合更重要，不支持“只要增加 exposure 就足够”。由于 Equiv-All 同时改变 unique diversity 和类别分布，本实验不能进一步把两者因果拆开。
+- 当前仅单 seed，两个主区间均跨 0；因此这是有方向一致性的 rescue 信号，不是已确证的 universal superiority。
+- S0 confidence 在 Equiv-All 下呈 high 0.00pt、mid +4.35pt、low +6.67pt，但 S0 free-generation Wrong 组为 -2.78pt；difficulty 机制只得到部分支持，不满足 Weak-S0 的明确触发条件。
+
 ## 直接对比
 
 - Balanced-336 × 4 相对 Balanced-336 × 1 的 Internal-Equiv delta 变化：{pct(derived["balanced4_minus_baseline_delta"])}。
@@ -192,6 +200,12 @@ def main() -> int:
 Teacher 正确功能类内部的 normalized entropy 三分位阈值由训练侧 Equiv-All Teacher cache 预先冻结；Internal outcome 没有参与阈值选择。
 
 {grouped_table(summaries, "teacher_entropy", ["low", "mid", "high"], "Teacher entropy")}
+
+## 科研判断
+
+- Equiv-All-1393×1 的 low/mid/high entropy delta 分别为 +4.12pt、+4.48pt、+2.38pt，没有随 entropy 升高而增强。
+- Balanced-336×4 虽从 low -3.09pt 变到 high +2.38pt，但该 setting 总体没有 Class 优势；三种训练设置之间方向不一致。
+- 因而 Teacher 类内 entropy 不能解释本轮 Equiv-All rescue，最多保留为未确证的探索性异质性。
 
 ## 解释边界
 
