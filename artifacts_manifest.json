@@ -2,7 +2,7 @@
   "manifest_version": 1,
   "project": "FC-SFT-verifiedClassKD",
   "phase": "v7_recovery",
-  "status": "in_progress",
+  "status": "paused_for_user_review",
   "created_at_utc": "2026-09-24",
   "baseline_git_sha": "07d72d62cb6a880388412382308567398e230256",
   "branch": "recovery/v7-rescue",
@@ -334,14 +334,25 @@
     },
     {
       "name": "v7_gradient_analysis_definition",
-      "status": "preregistered_pending_execution_after_memory_fix",
+      "status": "paused_after_three_oom_attempts_no_output",
       "trigger": "PRD case A: Balanced-336×1 Class Full regression largely shrinks at ×4 but Class does not win",
       "script": "scripts/v7_analyze_gradients.py",
       "script_sha256": "c34f05378c744fdf975b0338e0a3f3d707dc6c465244b89da88176b14381268b",
       "helper_sha256": "2455b76a4e112522bbd49c02192a1aef2f8711873f763a7118175085a167802b",
       "definition": "Formal S0; Balanced-336; first optimizer group from epoch 0; subset_size=16; seed=42; tau=2; alpha=1; max_length=2560; eval mode",
-      "engineering_note": "attempt 1 stopped before sample 7 and attempt 2 before sample 8 with CUDA OOM; neither wrote outputs or exposed gradient values. Gradients are copied to CPU and unreferenced autograd graphs now receive explicit garbage collection before clearing CUDA cache; scientific definition unchanged",
+      "engineering_note": "attempt 1 stopped before sample 7; attempts 2 and 3 stopped before sample 8 with CUDA OOM. None wrote outputs or exposed gradient values. CPU transfer, explicit deletion, garbage collection and empty_cache did not eliminate cross-sample allocated-memory growth; resume with per-sample frozen-model reload/process isolation without changing the scientific definition",
       "command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_analyze_gradients.py"
+    },
+    {
+      "name": "v7_user_review_checkpoint_2026-09-29",
+      "status": "complete",
+      "path": "reports/v7阶段审查检查点.md",
+      "sha256": "20b7c902e55dbdc6d2197a53ba30548bbbf14ec8749c0779380468efa4148668",
+      "scientific_results_git_sha": "3b7512ab88301c1a680ccabc4cda865d56a995d9",
+      "gradient_outputs_present": false,
+      "weak_s0": "SKIPPED",
+      "provisional_decision": "leans V7_CONDITIONAL_RESCUE; final label intentionally deferred",
+      "resume_action": "isolate every frozen gradient sample with a fresh model load or equivalent subprocess, then generate v7_final_decision.md"
     }
   ]
 }
