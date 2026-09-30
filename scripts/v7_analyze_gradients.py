@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import gc
-import hashlib
 import json
 import os
 import platform
@@ -13,6 +12,7 @@ import random
 import statistics
 import subprocess
 import sys
+import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -88,7 +88,9 @@ def aligned_inputs(
     if [str(row.get("sample_id")) for row in pool_rows] != ids:
         raise ValueError("pool is not exactly aligned with data")
     cache_by_id = {str(row.get("sample_id")): row for row in cache_rows}
-    if len(cache_by_id) != len(cache_rows) or any(sample_id not in cache_by_id for sample_id in ids):
+    if len(cache_by_id) != len(cache_rows) or any(
+        sample_id not in cache_by_id for sample_id in ids
+    ):
         raise ValueError("Teacher cache IDs are duplicated or incomplete")
     for row in pool_rows:
         if len(row.get("candidates", [])) != 4 or row.get("class_indices") != [0, 0, 1, 2]:
@@ -96,7 +98,9 @@ def aligned_inputs(
     return cache_by_id
 
 
-def add_gradients(accumulators: list[torch.Tensor], gradients: tuple[Any, ...], scale: float) -> None:
+def add_gradients(
+    accumulators: list[torch.Tensor], gradients: tuple[Any, ...], scale: float
+) -> None:
     for accumulator, gradient in zip(accumulators, gradients, strict=True):
         if gradient is not None:
             accumulator.add_(gradient.detach().float().cpu(), alpha=scale)
@@ -133,12 +137,86 @@ def diff_norm(left: tuple[Any, ...], right: tuple[Any, ...]) -> float:
     return squared**0.5
 
 
+def load_diagnostic_model(
+    cfg: Any, adapter: Path
+) -> tuple[Any, Any, list[tuple[str, torch.Tensor]]]:
+    base_model, tokenizer = load_student_model(
+        str(cfg.models.student_local),
+        load_in_4bit=True,
+        bf16=bool(cfg.hardware.bf16),
+        fp16=bool(cfg.hardware.fp16),
+    )
+    base_model = prepare_model_for_kbit_training(
+        base_model, gradient_checkpointing_kwargs={"use_reentrant": False}
+    )
+    model = PeftModel.from_pretrained(base_model, adapter, is_trainable=True)
+    model.config.use_cache = False
+    model.eval()
+    named_parameters = [
+        (name, parameter) for name, parameter in model.named_parameters() if parameter.requires_grad
+    ]
+    if not named_parameters:
+        raise RuntimeError("no trainable LoRA parameters")
+    return tokenizer, model, named_parameters
+
+
+def parse_smoke_positions(value: str, subset_size: int) -> list[int]:
+    """Parse one-based smoke positions and return zero-based unique positions."""
+    positions: list[int] = []
+    for item in value.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        position = int(item)
+        if not 1 <= position <= subset_size:
+            raise ValueError(f"smoke position {position} is outside 1..{subset_size}")
+        zero_based = position - 1
+        if zero_based not in positions:
+            positions.append(zero_based)
+    if not positions:
+        raise ValueError("memory-smoke-positions must contain at least one position")
+    return positions
+
+
+def worker_command(args: argparse.Namespace, position: int, output: Path) -> list[str]:
+    return [
+        sys.executable,
+        str(Path(__file__).resolve()),
+        "--config",
+        args.config,
+        "--data",
+        args.data,
+        "--pool",
+        args.pool,
+        "--teacher-cache",
+        args.teacher_cache,
+        "--s0-dir",
+        args.s0_dir,
+        "--subset-size",
+        str(args.subset_size),
+        "--seed",
+        str(args.seed),
+        "--temperature",
+        str(args.temperature),
+        "--alpha",
+        str(args.alpha),
+        "--max-length",
+        str(args.max_length),
+        "--worker-position",
+        str(position),
+        "--worker-output",
+        str(output),
+    ]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="V7 Candidate/Class 梯度机制诊断")
     parser.add_argument("--config", default="v7_rtx3090")
     parser.add_argument("--data", default="data/processed/v7/balanced_336.jsonl")
     parser.add_argument("--pool", default="data/candidates/v7/balanced_336_k4.jsonl")
-    parser.add_argument("--teacher-cache", default="data/cache/v7/teacher/teacher_equiv_all_scores.jsonl")
+    parser.add_argument(
+        "--teacher-cache", default="data/cache/v7/teacher/teacher_equiv_all_scores.jsonl"
+    )
     parser.add_argument("--s0-dir", default="outputs/v7_formal_s0_seed42")
     parser.add_argument("--subset-size", type=int, default=16)
     parser.add_argument("--seed", type=int, default=42)
@@ -147,7 +225,110 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-length", type=int, default=2560)
     parser.add_argument("--summary", default="reports/v7_gradient_analysis.json")
     parser.add_argument("--report", default="reports/v7_gradient_analysis.md")
+    parser.add_argument(
+        "--memory-smoke-positions",
+        default="",
+        help="只检查指定位置能否逐条释放显存，例如 1,8；不生成正式结果",
+    )
+    parser.add_argument("--worker-position", type=int, default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--worker-output", default="", help=argparse.SUPPRESS)
     return parser.parse_args()
+
+
+def run_worker(
+    args: argparse.Namespace,
+    cfg: Any,
+    adapter: Path,
+    records: list[Any],
+    pool_rows: list[dict[str, Any]],
+    cache_by_id: dict[str, dict[str, Any]],
+    indices: list[int],
+) -> int:
+    if args.worker_position is None or not args.worker_output:
+        raise ValueError("worker mode requires worker-position and worker-output")
+    if not 0 <= args.worker_position < len(indices):
+        raise ValueError("worker-position is outside the frozen subset")
+    output_path = Path(args.worker_output)
+    if output_path.exists():
+        raise FileExistsError(output_path)
+
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+    torch.cuda.reset_peak_memory_stats()
+    tokenizer, model, named_parameters = load_diagnostic_model(cfg, adapter)
+    parameters = [parameter for _, parameter in named_parameters]
+    index = indices[args.worker_position]
+    record = records[index]
+    candidates = [CandidateRecord.model_validate(item) for item in pool_rows[index]["candidates"]]
+    scores = score_candidate_sequences(
+        model, tokenizer, record, candidates, max_length=args.max_length, alpha=args.alpha
+    ).unsqueeze(0)
+    teacher = torch.tensor(
+        [cache_by_id[record.id]["candidate_probabilities"]],
+        dtype=torch.float32,
+        device=scores.device,
+    )
+    candidate_loss = fixed_support_kd_loss(
+        scores, teacher, "candidate", temperature=args.temperature
+    )
+    class_loss = fixed_support_kd_loss(scores, teacher, "class", temperature=args.temperature)
+    intra_loss = candidate_loss - class_loss
+    if not all(torch.isfinite(value) for value in (candidate_loss, class_loss, intra_loss)):
+        raise FloatingPointError(f"non-finite loss for {record.id}")
+
+    candidate_grads = cpu_gradients(
+        torch.autograd.grad(candidate_loss, parameters, retain_graph=True, allow_unused=True)
+    )
+    inter_grads = cpu_gradients(
+        torch.autograd.grad(class_loss, parameters, retain_graph=True, allow_unused=True)
+    )
+    intra_grads = cpu_gradients(torch.autograd.grad(intra_loss, parameters, allow_unused=True))
+    for gradients in (candidate_grads, inter_grads, intra_grads):
+        if any(
+            gradient is not None and not torch.isfinite(gradient).all() for gradient in gradients
+        ):
+            raise FloatingPointError(f"non-finite gradient for {record.id}")
+    values = {
+        "candidate": float(candidate_loss.detach().cpu()),
+        "class": float(class_loss.detach().cpu()),
+        "intra": float(intra_loss.detach().cpu()),
+    }
+    sample = {
+        "sample_id": record.id,
+        "equivalence_type": pool_rows[index]["equivalence_type"],
+        "candidate_loss": values["candidate"],
+        "class_loss": values["class"],
+        "intra_loss": values["intra"],
+        "grad_candidate_norm": norm_of(candidate_grads),
+        "grad_class_norm": norm_of(inter_grads),
+        "grad_intra_norm": norm_of(intra_grads),
+        "gradient_decomposition_residual_norm": diff_norm(
+            candidate_grads,
+            tuple(
+                None if a is None and b is None else b if a is None else a if b is None else a + b
+                for a, b in zip(inter_grads, intra_grads, strict=True)
+            ),
+        ),
+    }
+    torch.cuda.synchronize()
+    payload = {
+        "position": args.worker_position,
+        "sample_id": record.id,
+        "parameter_metadata": [
+            {"name": name, "shape": list(parameter.shape)} for name, parameter in named_parameters
+        ],
+        "candidate_gradients": candidate_grads,
+        "inter_gradients": inter_grads,
+        "intra_gradients": intra_grads,
+        "losses": values,
+        "sample": sample,
+        "peak_gpu_memory_mb": max_memory_mb(),
+    }
+    torch.save(payload, output_path)
+    print(f"单条训练信号完成：{args.worker_position + 1}/{len(indices)} {record.id}", flush=True)
+    return 0
 
 
 def main() -> int:
@@ -169,107 +350,70 @@ def main() -> int:
     if len(indices) != args.subset_size:
         raise AssertionError("first optimizer group has the wrong size")
 
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
-    torch.cuda.reset_peak_memory_stats()
-    base_model, tokenizer = load_student_model(
-        str(cfg.models.student_local),
-        load_in_4bit=True,
-        bf16=bool(cfg.hardware.bf16),
-        fp16=bool(cfg.hardware.fp16),
+    if args.worker_position is not None or args.worker_output:
+        return run_worker(args, cfg, adapter, records, pool_rows, cache_by_id, indices)
+
+    smoke_positions = (
+        parse_smoke_positions(args.memory_smoke_positions, args.subset_size)
+        if args.memory_smoke_positions
+        else []
     )
-    base_model = prepare_model_for_kbit_training(
-        base_model, gradient_checkpointing_kwargs={"use_reentrant": False}
-    )
-    model = PeftModel.from_pretrained(base_model, adapter, is_trainable=True)
-    model.config.use_cache = False
-    model.eval()
-    parameters = [parameter for parameter in model.parameters() if parameter.requires_grad]
-    if not parameters:
-        raise RuntimeError("no trainable LoRA parameters")
-    candidate_sum = [torch.zeros_like(parameter, device="cpu", dtype=torch.float32) for parameter in parameters]
-    inter_sum = [torch.zeros_like(parameter, device="cpu", dtype=torch.float32) for parameter in parameters]
-    intra_sum = [torch.zeros_like(parameter, device="cpu", dtype=torch.float32) for parameter in parameters]
+    positions = smoke_positions or list(range(len(indices)))
+    parameter_metadata: list[dict[str, Any]] | None = None
+    candidate_sum: list[torch.Tensor] = []
+    inter_sum: list[torch.Tensor] = []
+    intra_sum: list[torch.Tensor] = []
     sample_rows: list[dict[str, Any]] = []
     loss_sums = {"candidate": 0.0, "class": 0.0, "intra": 0.0}
+    peak_worker_memory_mb = 0.0
     scale = 1.0 / len(indices)
-    for position, index in enumerate(indices, start=1):
-        record = records[index]
-        candidates = [CandidateRecord.model_validate(item) for item in pool_rows[index]["candidates"]]
-        scores = score_candidate_sequences(
-            model, tokenizer, record, candidates, max_length=args.max_length, alpha=args.alpha
-        ).unsqueeze(0)
-        teacher = torch.tensor(
-            [cache_by_id[record.id]["candidate_probabilities"]],
-            dtype=torch.float32,
-            device=scores.device,
-        )
-        candidate_loss = fixed_support_kd_loss(
-            scores, teacher, "candidate", temperature=args.temperature
-        )
-        class_loss = fixed_support_kd_loss(scores, teacher, "class", temperature=args.temperature)
-        intra_loss = candidate_loss - class_loss
-        if not all(torch.isfinite(value) for value in (candidate_loss, class_loss, intra_loss)):
-            raise FloatingPointError(f"non-finite loss for {record.id}")
-        candidate_device_grads = torch.autograd.grad(
-            candidate_loss, parameters, retain_graph=True, allow_unused=True
-        )
-        candidate_grads = cpu_gradients(candidate_device_grads)
-        del candidate_device_grads
-        inter_device_grads = torch.autograd.grad(
-            class_loss, parameters, retain_graph=True, allow_unused=True
-        )
-        inter_grads = cpu_gradients(inter_device_grads)
-        del inter_device_grads
-        intra_device_grads = torch.autograd.grad(intra_loss, parameters, allow_unused=True)
-        intra_grads = cpu_gradients(intra_device_grads)
-        del intra_device_grads
-        add_gradients(candidate_sum, candidate_grads, scale)
-        add_gradients(inter_sum, inter_grads, scale)
-        add_gradients(intra_sum, intra_grads, scale)
-        values = {
-            "candidate": float(candidate_loss.detach().cpu()),
-            "class": float(class_loss.detach().cpu()),
-            "intra": float(intra_loss.detach().cpu()),
-        }
-        for key, value in values.items():
-            loss_sums[key] += value
-        sample_rows.append(
-            {
-                "sample_id": record.id,
-                "equivalence_type": pool_rows[index]["equivalence_type"],
-                "candidate_loss": values["candidate"],
-                "class_loss": values["class"],
-                "intra_loss": values["intra"],
-                "grad_candidate_norm": norm_of(candidate_grads),
-                "grad_class_norm": norm_of(inter_grads),
-                "grad_intra_norm": norm_of(intra_grads),
-                "gradient_decomposition_residual_norm": diff_norm(
-                    candidate_grads,
-                    tuple(
-                        None if a is None and b is None else (
-                            b if a is None else a if b is None else a + b
-                        )
-                        for a, b in zip(inter_grads, intra_grads, strict=True)
-                    ),
-                ),
-            }
-        )
-        del (
-            scores,
-            teacher,
-            candidate_loss,
-            class_loss,
-            intra_loss,
-            candidate_grads,
-            inter_grads,
-            intra_grads,
-        )
-        gc.collect()
-        torch.cuda.empty_cache()
-        print(f"gradient diagnostic: {position}/{len(indices)} {record.id}", flush=True)
+
+    with tempfile.TemporaryDirectory(prefix="v7-gradient-") as temporary_directory:
+        temporary_root = Path(temporary_directory)
+        for sequence, position in enumerate(positions, start=1):
+            worker_output = temporary_root / f"sample-{position:03d}.pt"
+            subprocess.run(
+                worker_command(args, position, worker_output), cwd=PROJECT_ROOT, check=True
+            )
+            if not worker_output.is_file():
+                raise FileNotFoundError(worker_output)
+            if smoke_positions:
+                worker_output.unlink()
+                print(
+                    f"显存检查完成：{sequence}/{len(positions)}，固定位置 {position + 1}",
+                    flush=True,
+                )
+                continue
+
+            payload = torch.load(worker_output, map_location="cpu", weights_only=False)
+            worker_output.unlink()
+            expected_id = records[indices[position]].id
+            if payload["position"] != position or payload["sample_id"] != expected_id:
+                raise ValueError("worker result does not match the frozen sample order")
+            if parameter_metadata is None:
+                parameter_metadata = payload["parameter_metadata"]
+                shapes = [tuple(item["shape"]) for item in parameter_metadata]
+                candidate_sum = [torch.zeros(shape, dtype=torch.float32) for shape in shapes]
+                inter_sum = [torch.zeros(shape, dtype=torch.float32) for shape in shapes]
+                intra_sum = [torch.zeros(shape, dtype=torch.float32) for shape in shapes]
+            elif payload["parameter_metadata"] != parameter_metadata:
+                raise ValueError("trainable parameter order changed across workers")
+            add_gradients(candidate_sum, payload["candidate_gradients"], scale)
+            add_gradients(inter_sum, payload["inter_gradients"], scale)
+            add_gradients(intra_sum, payload["intra_gradients"], scale)
+            for key in loss_sums:
+                loss_sums[key] += float(payload["losses"][key])
+            sample_rows.append(payload["sample"])
+            peak_worker_memory_mb = max(peak_worker_memory_mb, float(payload["peak_gpu_memory_mb"]))
+            del payload
+            gc.collect()
+            print(f"训练信号汇总：{sequence}/{len(positions)}", flush=True)
+
+    if smoke_positions:
+        print("TRAIN_SIGNAL_MEMORY_SMOKE_OK=true")
+        return 0
+    if len(sample_rows) != len(indices) or parameter_metadata is None:
+        raise AssertionError("official gradient aggregation is incomplete")
 
     geometry = gradient_geometry(candidate_sum, inter_sum, intra_sum)
     sample_norm_means = {
@@ -281,6 +425,7 @@ def main() -> int:
         "created_at_utc": datetime.now(UTC).isoformat(),
         "selection": "first optimizer group from build_epoch_groups(epoch=0)",
         "model_mode": "eval (dropout disabled); diagnostic geometry, not an optimizer trace",
+        "sample_isolation": "one fresh subprocess and model load per sample; CPU aggregation",
         "data": relative(data_path),
         "data_sha256": sha256_file(data_path),
         "pool": relative(pool_path),
@@ -316,43 +461,56 @@ def main() -> int:
         "max_per_sample_decomposition_residual_norm": max(
             row["gradient_decomposition_residual_norm"] for row in sample_rows
         ),
-        "peak_gpu_memory_mb": max_memory_mb(),
+        "peak_gpu_memory_mb": peak_worker_memory_mb,
         "samples": sample_rows,
     }
     summary_path = resolve(args.summary)
     atomic_write(summary_path, json.dumps(output, ensure_ascii=False, indent=2) + "\n")
-    report = f"""# V7 Gradient Analysis
+    report = f"""# V7 训练信号分析
 
-## 固定诊断定义
+## 先说结果怎么看
 
-- 触发条件：情况 A。Balanced-336×1 的 Class 明显退化，×4 后 Full 差距从 -10.80pt 缩至 -1.60pt；需要检查 Class 是否缺少类内项而信号更弱。
-- 模型：冻结的 Formal S0；数据：Balanced-336 的 seed 42、epoch 0 第一个实际 optimizer group，共 {args.subset_size} 条。
-- 模型置于 eval mode 关闭 dropout，测量确定性的 objective geometry；这不是某次随机训练 step 的梯度轨迹。
-- 精确分解：`L_candidate = L_inter + L_intra`，且 `L_class = L_inter`。三组梯度从同一次 forward graph 独立求导。
+这里比较两种训练方法推动模型参数变化的力量。数值越大，说明这一步推动得越强；方向接近，说明两种信号在推动相近的变化，方向相反则会互相抵消。
 
-## 聚合 mean-loss 梯度
+完整候选蒸馏（`Candidate KD`）同时学习不同功能类别和同类写法偏好。功能类别蒸馏（`Class KD`）只学习不同功能类别。
 
-| Quantity | Value |
+## 固定计算范围
+
+- 触发原因：Balanced-336 训练 1 轮时，`Class KD` 明显较差；训练 4 轮后差距缩小，因此检查它是否只是训练信号较弱。
+- 模型固定为正式的初始学生模型。样本固定为 Balanced-336 在随机种子 42、首轮训练的第一组，共 {args.subset_size} 条。
+- 每条样本都在全新进程中单独加载模型，结束后释放显存；最后只在普通内存中汇总。这样只解决显存累积，不改变样本、模型或计算公式。
+- 模型关闭随机丢弃，因此同一输入可重复计算。这里分析的是训练目标本身，不代表一次真实训练更新。
+- 公式为 `L_candidate = L_inter + L_intra`，`L_class = L_inter`。其中 `inter` 是不同功能类别之间的信号，`intra` 是同一功能类别内部不同写法之间的信号。
+
+## 16 条样本的平均训练信号
+
+| 衡量内容 | 数值 |
 |---|---:|
-| `||grad_candidate||` | {geometry['grad_candidate_norm']:.8f} |
-| `||grad_class||` | {geometry['grad_class_norm']:.8f} |
-| `||grad_inter||` | {geometry['grad_inter_norm']:.8f} |
-| `||grad_intra||` | {geometry['grad_intra_norm']:.8f} |
-| Candidate / Class norm | {geometry['candidate_over_class']:.4f} |
-| Intra / Inter norm | {geometry['intra_over_inter']:.4f} |
-| cosine(grad_inter, grad_intra) | {geometry['cosine_inter_intra']:.6f} |
-| decomposition residual norm | {geometry['decomposition_residual_norm']:.3e} |
+| 完整候选蒸馏的信号长度 | {geometry["grad_candidate_norm"]:.8f} |
+| 功能类别蒸馏的信号长度 | {geometry["grad_class_norm"]:.8f} |
+| 不同功能类别之间的信号长度 | {geometry["grad_inter_norm"]:.8f} |
+| 同类不同写法的信号长度 | {geometry["grad_intra_norm"]:.8f} |
+| 完整候选 / 功能类别信号长度 | {geometry["candidate_over_class"]:.4f} |
+| 同类写法 / 不同功能类别信号长度 | {geometry["intra_over_inter"]:.4f} |
+| 两部分方向相似度（1 同向，-1 反向） | {geometry["cosine_inter_intra"]:.6f} |
+| 分解误差（越接近 0 越好） | {geometry["decomposition_residual_norm"]:.3e} |
 
-## 解释边界
+## 结论边界
 
-- Class 与 inter 的梯度按定义相同；Candidate 的额外信号来自 intra。
-- 范数只能解释 signal strength / direction，不能替代 free-generation evaluator，也不能单独证明 scaling 因果机制。
-- 本诊断仅一个预定义 optimizer group，不把小样本梯度统计外推成总体显著性结论。
+- `Class KD` 的信号按定义就是不同功能类别之间的信号；`Candidate KD` 还多了同类不同写法的信号。
+- 信号长度和方向只能帮助解释现象，不能代替正式生成评测，也不能单独证明扩大数据后的变化由它造成。
+- 本分析只有一组预先固定的 16 条样本，不能把它当成全部训练数据上的统计定论。
 
-机器可读结果：[v7_gradient_analysis.json](v7_gradient_analysis.json)。
+详细计算结果见 [v7_gradient_analysis.json](v7_gradient_analysis.json)。
 """
     atomic_write(resolve(args.report), report)
-    print(json.dumps({"geometry": geometry, "peak_gpu_memory_mb": output["peak_gpu_memory_mb"]}, indent=2))
+    print(
+        json.dumps(
+            {"geometry": geometry, "peak_gpu_memory_mb": output["peak_gpu_memory_mb"]},
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
     print("V7_GRADIENT_ANALYSIS_OK=true")
     return 0
 

@@ -2,7 +2,7 @@
   "manifest_version": 1,
   "project": "FC-SFT-verifiedClassKD",
   "phase": "v7_recovery",
-  "status": "paused_for_user_review",
+  "status": "in_progress",
   "created_at_utc": "2026-09-24",
   "baseline_git_sha": "07d72d62cb6a880388412382308567398e230256",
   "branch": "recovery/v7-rescue",
@@ -334,13 +334,15 @@
     },
     {
       "name": "v7_gradient_analysis_definition",
-      "status": "paused_after_three_oom_attempts_no_output",
+      "status": "implementation_frozen_pending_isolated_smoke",
       "trigger": "PRD case A: Balanced-336×1 Class Full regression largely shrinks at ×4 but Class does not win",
       "script": "scripts/v7_analyze_gradients.py",
-      "script_sha256": "c34f05378c744fdf975b0338e0a3f3d707dc6c465244b89da88176b14381268b",
+      "script_sha256": "46a5512a3986d8826f8ad0f180949a0ba19beb6d84aded6a7664a5c3025dca73",
       "helper_sha256": "2455b76a4e112522bbd49c02192a1aef2f8711873f763a7118175085a167802b",
       "definition": "Formal S0; Balanced-336; first optimizer group from epoch 0; subset_size=16; seed=42; tau=2; alpha=1; max_length=2560; eval mode",
-      "engineering_note": "attempt 1 stopped before sample 7; attempts 2 and 3 stopped before sample 8 with CUDA OOM. None wrote outputs or exposed gradient values. CPU transfer, explicit deletion, garbage collection and empty_cache did not eliminate cross-sample allocated-memory growth; resume with per-sample frozen-model reload/process isolation without changing the scientific definition",
+      "engineering_note": "attempt 1 stopped before sample 7; attempts 2 and 3 stopped before sample 8 with CUDA OOM. None wrote outputs or exposed gradient values. The frozen implementation now starts one fresh subprocess and model load per sample, returns CPU gradients, exits to release CUDA state, and aggregates the same 16-sample mean on CPU. This changes only memory isolation, not samples, losses, model mode, or formulas",
+      "tests": "93 passed; position parser duplicate/out-of-range check passed; ruff and diff checks passed",
+      "smoke_command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_analyze_gradients.py --memory-smoke-positions 1,8",
       "command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_analyze_gradients.py"
     },
     {
