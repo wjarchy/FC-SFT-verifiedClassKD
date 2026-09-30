@@ -334,7 +334,7 @@
     },
     {
       "name": "v7_gradient_analysis_definition",
-      "status": "implementation_refrozen_pending_candidate_microbatch_smoke",
+      "status": "memory_smoke_passed_pending_official_run",
       "trigger": "PRD case A: Balanced-336×1 Class Full regression largely shrinks at ×4 but Class does not win",
       "script": "scripts/v7_analyze_gradients.py",
       "script_sha256": "ad9c5a52c4239fa5315da7ef8e92ce011cfae14874ca982b8085d02f17239a35",
@@ -343,6 +343,7 @@
       "engineering_note": "attempts 1-3 showed cross-sample CUDA accumulation. The first isolated smoke then completed position 1 but position 8 alone OOMed during the four-candidate forward; no formal outputs or gradient values were produced. The refrozen implementation keeps one fresh process per sample and additionally scores one candidate at a time. It first differentiates each loss exactly with respect to the four scores, then applies the chain rule candidate by candidate and sums CPU parameter gradients. Samples, losses, model eval mode, and aggregate formula remain fixed; candidate micro-batch size is now explicitly 1",
       "tests": "94 passed, including exact chain-rule versus direct-gradient regression; position parser duplicate/out-of-range check passed; ruff and diff checks passed",
       "smoke_command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_analyze_gradients.py --candidate-micro-batch-size 1 --memory-smoke-positions 1,8",
+      "smoke_result": "passed for frozen positions 1 (toolace_6797) and 8 (xlam_30185, longest in the group); both subprocesses exited; GPU returned to 0 MiB; no formal output files were created",
       "command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_analyze_gradients.py --candidate-micro-batch-size 1"
     },
     {
