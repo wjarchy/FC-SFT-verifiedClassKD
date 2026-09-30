@@ -18,9 +18,9 @@
 - `v7_scaling_report.md`：336×1、336×4 与 Equiv-All×1 的 exposure / unique diversity 主比较。
 - `v7_teacher_entropy_analysis.md`：按训练侧预冻结 Teacher 类内 entropy 三分位的机制分析。
 - `v7_discordant_cases.md`：三个 setting 中 Candidate-only / Class-only 正确样本的无筛选汇总。
-- `v7_gradient_analysis.md`：Formal S0 上预定义 16 条 optimizer group 的梯度机制诊断（完成后生成）。
+- `v7_gradient_analysis.md`：固定初始学生模型上预定义 16 条样本的训练信号分析；已完成并独立核对。
 - `v7阶段审查检查点.md`：数据规模对比完成、训练信号分析尚未完成时，供用户审查的通俗中文暂停报告。
-- `v7_final_decision.md`：V7 最终科研判定（完成后生成）。
+- `v7_final_decision.md`：V7 最终科研判定；结论为 `V7_CONDITIONAL_RESCUE`，即“有条件保留”。
 - 后续新增 `opportunity_report.json/.csv` 与 `opportunity_examples.jsonl`：V5 第一生死 Gate；当前尚未生成。
 - `实验环境记录.md`：RTX 3090、关键依赖和 Qwen3-0.6B 模型版本。
 - `冒烟与小样本过拟合结果.md`：真实 GPU 冒烟测试与 8 条样本过拟合结果。

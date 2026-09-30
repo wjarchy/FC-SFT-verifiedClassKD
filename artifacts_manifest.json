@@ -2,7 +2,7 @@
   "manifest_version": 1,
   "project": "FC-SFT-verifiedClassKD",
   "phase": "v7_recovery",
-  "status": "in_progress",
+  "status": "complete",
   "created_at_utc": "2026-09-24",
   "baseline_git_sha": "07d72d62cb6a880388412382308567398e230256",
   "branch": "recovery/v7-rescue",
@@ -334,7 +334,7 @@
     },
     {
       "name": "v7_gradient_analysis_definition",
-      "status": "memory_smoke_passed_pending_official_run",
+      "status": "complete",
       "trigger": "PRD case A: Balanced-336×1 Class Full regression largely shrinks at ×4 but Class does not win",
       "script": "scripts/v7_analyze_gradients.py",
       "script_sha256": "ad9c5a52c4239fa5315da7ef8e92ce011cfae14874ca982b8085d02f17239a35",
@@ -344,7 +344,18 @@
       "tests": "94 passed, including exact chain-rule versus direct-gradient regression; position parser duplicate/out-of-range check passed; ruff and diff checks passed",
       "smoke_command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_analyze_gradients.py --candidate-micro-batch-size 1 --memory-smoke-positions 1,8",
       "smoke_result": "passed for frozen positions 1 (toolace_6797) and 8 (xlam_30185, longest in the group); both subprocesses exited; GPU returned to 0 MiB; no formal output files were created",
-      "command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_analyze_gradients.py --candidate-micro-batch-size 1"
+      "command": "TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src /root/miniconda3/envs/wj/bin/python scripts/v7_analyze_gradients.py --candidate-micro-batch-size 1",
+      "run_git_sha": "2e41f9a4a05e81d5ea92ff342be7550fa62560e2",
+      "summary": "reports/v7_gradient_analysis.json",
+      "summary_sha256": "8d863bcad1fea45842bbe8aca350d7b2d16fec72800bfc8284a1926f5edba5a9",
+      "report": "reports/v7_gradient_analysis.md",
+      "report_sha256": "89567b119e9560d47d2098ee55af9029a66d20a45e923fd7419fd014f9d2381a",
+      "candidate_over_class_gradient_norm": 1.0276928901182263,
+      "intra_over_inter_gradient_norm": 0.09558024747933015,
+      "cosine_inter_intra": 0.24950017552972123,
+      "relative_decomposition_residual": 0.0023471123094834356,
+      "peak_gpu_memory_mb": 12180.93994140625,
+      "validation": "16 frozen IDs and order, all input hashes, finite numbers, exact loss decomposition, derived ratios, report values, clean git state, and GPU limit independently checked"
     },
     {
       "name": "v7_user_review_checkpoint_2026-09-29",
@@ -360,6 +371,15 @@
       "weak_s0": "SKIPPED",
       "provisional_decision": "leans V7_CONDITIONAL_RESCUE; final label intentionally deferred",
       "resume_action": "isolate every frozen gradient sample with a fresh model load or equivalent subprocess, then generate v7_final_decision.md"
+    },
+    {
+      "name": "v7_final_decision",
+      "status": "complete",
+      "decision": "V7_CONDITIONAL_RESCUE",
+      "path": "reports/v7_final_decision.md",
+      "sha256": "4ca27a20cbb3976c7b3d31733dbe4323263d81ef2bff169f81cdc55a142b9b5a",
+      "weak_s0": "SKIPPED",
+      "basis": "Equiv-All-1393x1 is directionally positive on Full and Internal-Equiv and fixed-support confidence improves monotonically from high to low, but main intervals cross zero, only one seed is available, free-generation correctness contradicts the difficulty hypothesis, and teacher entropy is not monotonic"
     }
   ]
 }

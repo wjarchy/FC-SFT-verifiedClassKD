@@ -1,0 +1,257 @@
+{
+  "definition": {
+    "kind": "v7_gradient_geometry_at_formal_s0",
+    "created_at_utc": "2026-09-30T02:40:42.862914+00:00",
+    "selection": "first optimizer group from build_epoch_groups(epoch=0)",
+    "model_mode": "eval (dropout disabled); diagnostic geometry, not an optimizer trace",
+    "sample_isolation": "one fresh subprocess and model load per sample; CPU aggregation",
+    "data": "data/processed/v7/balanced_336.jsonl",
+    "data_sha256": "aee4fa587b609a0c336aa43cb524678b7cfc6d52e40fb2ec1ee93b16146e9ed0",
+    "pool": "data/candidates/v7/balanced_336_k4.jsonl",
+    "pool_sha256": "1d0e7e8ffcb5477e6017f33c1a41cd142d15faf1d7316ba073cbc26411787d72",
+    "teacher_cache": "data/cache/v7/teacher/teacher_equiv_all_scores.jsonl",
+    "teacher_cache_sha256": "124c3e7abd70fbea67bd3772550fd696dd6a55cb20829ba48270906e6c48d06c",
+    "s0_adapter": "outputs/v7_formal_s0_seed42/checkpoint-step-000564/adapter",
+    "s0_adapter_sha256": "6bb07558d42735f32ae1676fc3eaae64c786523f8bb55bb4078a90b9ef06d2d5",
+    "student_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "seed": 42,
+    "subset_size": 16,
+    "sample_ids": [
+      "toolace_6797",
+      "xlam_41387",
+      "xlam_50257",
+      "xlam_14393",
+      "xlam_3863",
+      "xlam_30429",
+      "toolace_9640",
+      "xlam_30185",
+      "xlam_36562",
+      "xlam_46322",
+      "xlam_3538",
+      "xlam_58071",
+      "xlam_26176",
+      "xlam_6683",
+      "xlam_37514",
+      "toolace_3595"
+    ],
+    "equivalence_type_counts": {
+      "A": 9,
+      "B": 5,
+      "C": 2
+    },
+    "temperature": 2.0,
+    "alpha": 1.0,
+    "max_length": 2560,
+    "candidate_micro_batch_size": 1,
+    "git": {
+      "commit": "2e41f9a4a05e81d5ea92ff342be7550fa62560e2",
+      "dirty": false
+    },
+    "environment": {
+      "python": "3.11.16",
+      "torch": "2.5.1+cu124",
+      "cuda": "12.4",
+      "gpu": "NVIDIA GeForce RTX 3090"
+    }
+  },
+  "mean_losses": {
+    "candidate": 0.16677510924637318,
+    "class": 0.15455013513565063,
+    "intra": 0.012224974110722542
+  },
+  "aggregate_mean_gradient_geometry": {
+    "grad_candidate_norm": 0.8178313221670374,
+    "grad_class_norm": 0.7957935002089521,
+    "grad_inter_norm": 0.7957935002089521,
+    "grad_intra_norm": 0.07606213969241402,
+    "candidate_over_class": 1.0276928901182263,
+    "intra_over_inter": 0.09558024747933015,
+    "cosine_inter_intra": 0.24950017552972123,
+    "decomposition_residual_norm": 0.0019195419633393667
+  },
+  "mean_per_sample_gradient_norms": {
+    "grad_candidate_norm": 1.2816228857387975,
+    "grad_class_norm": 1.272706584325021,
+    "grad_intra_norm": 0.18444054348947841
+  },
+  "max_per_sample_decomposition_residual_norm": 0.01249795854469539,
+  "peak_gpu_memory_mb": 12180.93994140625,
+  "samples": [
+    {
+      "sample_id": "toolace_6797",
+      "equivalence_type": "A",
+      "candidate_loss": 0.2174142599105835,
+      "class_loss": 0.21026110649108887,
+      "intra_loss": 0.007153153419494629,
+      "grad_candidate_norm": 1.5812808468539097,
+      "grad_class_norm": 1.5387276258936018,
+      "grad_intra_norm": 0.19630073641820242,
+      "gradient_decomposition_residual_norm": 0.0035099271176349017
+    },
+    {
+      "sample_id": "xlam_41387",
+      "equivalence_type": "C",
+      "candidate_loss": 0.19723665714263916,
+      "class_loss": 0.19603925943374634,
+      "intra_loss": 0.0011973977088928223,
+      "grad_candidate_norm": 1.6010768482642834,
+      "grad_class_norm": 1.6021830313477516,
+      "grad_intra_norm": 0.06417349124244469,
+      "gradient_decomposition_residual_norm": 0.01249795854469539
+    },
+    {
+      "sample_id": "xlam_50257",
+      "equivalence_type": "A",
+      "candidate_loss": 0.11706548929214478,
+      "class_loss": 0.09708791971206665,
+      "intra_loss": 0.019977569580078125,
+      "grad_candidate_norm": 0.9445935287468706,
+      "grad_class_norm": 0.9450253525499526,
+      "grad_intra_norm": 0.15035487703590442,
+      "gradient_decomposition_residual_norm": 0.006756921197132507
+    },
+    {
+      "sample_id": "xlam_14393",
+      "equivalence_type": "A",
+      "candidate_loss": 0.242975652217865,
+      "class_loss": 0.24166417121887207,
+      "intra_loss": 0.00131148099899292,
+      "grad_candidate_norm": 1.9325918646310665,
+      "grad_class_norm": 1.920301360887606,
+      "grad_intra_norm": 0.10033822466714264,
+      "gradient_decomposition_residual_norm": 0.0044280180429560586
+    },
+    {
+      "sample_id": "xlam_3863",
+      "equivalence_type": "B",
+      "candidate_loss": 0.29838478565216064,
+      "class_loss": 0.2705039978027344,
+      "intra_loss": 0.02788078784942627,
+      "grad_candidate_norm": 1.7216594203450348,
+      "grad_class_norm": 1.720047628081099,
+      "grad_intra_norm": 0.22713433549868747,
+      "gradient_decomposition_residual_norm": 0.011064834138350755
+    },
+    {
+      "sample_id": "xlam_30429",
+      "equivalence_type": "C",
+      "candidate_loss": 0.07426023483276367,
+      "class_loss": 0.05305290222167969,
+      "intra_loss": 0.021207332611083984,
+      "grad_candidate_norm": 0.8400113763335639,
+      "grad_class_norm": 0.7893784838806874,
+      "grad_intra_norm": 0.47089828405622164,
+      "gradient_decomposition_residual_norm": 0.0033146638694114324
+    },
+    {
+      "sample_id": "toolace_9640",
+      "equivalence_type": "A",
+      "candidate_loss": 0.09680718183517456,
+      "class_loss": 0.06389808654785156,
+      "intra_loss": 0.032909095287323,
+      "grad_candidate_norm": 0.5397673336212846,
+      "grad_class_norm": 0.5397936633591106,
+      "grad_intra_norm": 0.4946455917124362,
+      "gradient_decomposition_residual_norm": 0.004566020809943385
+    },
+    {
+      "sample_id": "xlam_30185",
+      "equivalence_type": "A",
+      "candidate_loss": 0.1665726900100708,
+      "class_loss": 0.16093528270721436,
+      "intra_loss": 0.005637407302856445,
+      "grad_candidate_norm": 1.3757363566368481,
+      "grad_class_norm": 1.3673333152462894,
+      "grad_intra_norm": 0.2029390173682882,
+      "gradient_decomposition_residual_norm": 0.011202098302987223
+    },
+    {
+      "sample_id": "xlam_36562",
+      "equivalence_type": "A",
+      "candidate_loss": 0.2545091509819031,
+      "class_loss": 0.24066120386123657,
+      "intra_loss": 0.013847947120666504,
+      "grad_candidate_norm": 2.182121017164278,
+      "grad_class_norm": 2.169662894372064,
+      "grad_intra_norm": 0.31567100596239656,
+      "gradient_decomposition_residual_norm": 0.003958234038584734
+    },
+    {
+      "sample_id": "xlam_46322",
+      "equivalence_type": "B",
+      "candidate_loss": 0.05645740032196045,
+      "class_loss": 0.05641365051269531,
+      "intra_loss": 4.374980926513672e-05,
+      "grad_candidate_norm": 0.9128568397341629,
+      "grad_class_norm": 0.9108098896942552,
+      "grad_intra_norm": 0.0056985380059184935,
+      "gradient_decomposition_residual_norm": 0.006335693114685426
+    },
+    {
+      "sample_id": "xlam_3538",
+      "equivalence_type": "A",
+      "candidate_loss": 0.22857582569122314,
+      "class_loss": 0.2250848412513733,
+      "intra_loss": 0.0034909844398498535,
+      "grad_candidate_norm": 1.5745174033449354,
+      "grad_class_norm": 1.5561370862481372,
+      "grad_intra_norm": 0.11252219786587223,
+      "gradient_decomposition_residual_norm": 0.010471775470602728
+    },
+    {
+      "sample_id": "xlam_58071",
+      "equivalence_type": "B",
+      "candidate_loss": 0.030314922332763672,
+      "class_loss": 0.026813268661499023,
+      "intra_loss": 0.0035016536712646484,
+      "grad_candidate_norm": 0.1690630430291304,
+      "grad_class_norm": 0.1936582374695142,
+      "grad_intra_norm": 0.07841530436830192,
+      "gradient_decomposition_residual_norm": 0.0016217387963431656
+    },
+    {
+      "sample_id": "xlam_26176",
+      "equivalence_type": "A",
+      "candidate_loss": 0.055342018604278564,
+      "class_loss": 0.049458205699920654,
+      "intra_loss": 0.00588381290435791,
+      "grad_candidate_norm": 0.7363792312366656,
+      "grad_class_norm": 0.7330836529134371,
+      "grad_intra_norm": 0.11270606982897821,
+      "gradient_decomposition_residual_norm": 0.005355751162888399
+    },
+    {
+      "sample_id": "xlam_6683",
+      "equivalence_type": "B",
+      "candidate_loss": 0.21417871117591858,
+      "class_loss": 0.1772092580795288,
+      "intra_loss": 0.03696945309638977,
+      "grad_candidate_norm": 1.2100061946401246,
+      "grad_class_norm": 1.2033361407864407,
+      "grad_intra_norm": 0.1985820031646279,
+      "gradient_decomposition_residual_norm": 0.001610191134038524
+    },
+    {
+      "sample_id": "xlam_37514",
+      "equivalence_type": "B",
+      "candidate_loss": 0.19284185767173767,
+      "class_loss": 0.18382510542869568,
+      "intra_loss": 0.009016752243041992,
+      "grad_candidate_norm": 1.5837428549799955,
+      "grad_class_norm": 1.576919537405511,
+      "grad_intra_norm": 0.10362263930916654,
+      "gradient_decomposition_residual_norm": 0.01144323208821838
+    },
+    {
+      "sample_id": "toolace_3595",
+      "equivalence_type": "A",
+      "candidate_loss": 0.22546491026878357,
+      "class_loss": 0.2198939025402069,
+      "intra_loss": 0.00557100772857666,
+      "grad_candidate_norm": 1.6005620122586055,
+      "grad_class_norm": 1.5969074490648774,
+      "grad_intra_norm": 0.11704637932706526,
+      "gradient_decomposition_residual_norm": 0.0030009144756041853
+    }
+  ]
+}
