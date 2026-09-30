@@ -106,13 +106,6 @@ def add_gradients(
             accumulator.add_(gradient.detach().float().cpu(), alpha=scale)
 
 
-def cpu_gradients(gradients: tuple[Any, ...]) -> tuple[Any, ...]:
-    """Move diagnostic gradients off GPU without changing their values."""
-    return tuple(
-        None if gradient is None else gradient.detach().float().cpu() for gradient in gradients
-    )
-
-
 def norm_of(gradients: tuple[Any, ...]) -> float:
     squared = 0.0
     for gradient in gradients:
@@ -135,6 +128,38 @@ def diff_norm(left: tuple[Any, ...], right: tuple[Any, ...]) -> float:
             delta = first.detach().double() - second.detach().double()
         squared += float(torch.sum(delta * delta))
     return squared**0.5
+
+
+def loss_values_and_score_weights(
+    scores: torch.Tensor,
+    teacher: torch.Tensor,
+    temperature: float,
+) -> tuple[dict[str, float], dict[str, torch.Tensor]]:
+    """Return losses and exact derivatives with respect to the four candidate scores."""
+    score_leaf = scores.detach().float().cpu().requires_grad_(True)
+    teacher_cpu = teacher.detach().float().cpu()
+    candidate_loss = fixed_support_kd_loss(
+        score_leaf, teacher_cpu, "candidate", temperature=temperature
+    )
+    class_loss = fixed_support_kd_loss(score_leaf, teacher_cpu, "class", temperature=temperature)
+    intra_loss = candidate_loss - class_loss
+    if not all(torch.isfinite(value) for value in (candidate_loss, class_loss, intra_loss)):
+        raise FloatingPointError("non-finite loss")
+    weights = {
+        "candidate": torch.autograd.grad(candidate_loss, score_leaf, retain_graph=True)[0]
+        .squeeze(0)
+        .detach(),
+        "class": torch.autograd.grad(class_loss, score_leaf, retain_graph=True)[0]
+        .squeeze(0)
+        .detach(),
+        "intra": torch.autograd.grad(intra_loss, score_leaf)[0].squeeze(0).detach(),
+    }
+    values = {
+        "candidate": float(candidate_loss.detach()),
+        "class": float(class_loss.detach()),
+        "intra": float(intra_loss.detach()),
+    }
+    return values, weights
 
 
 def load_diagnostic_model(
@@ -202,6 +227,8 @@ def worker_command(args: argparse.Namespace, position: int, output: Path) -> lis
         str(args.alpha),
         "--max-length",
         str(args.max_length),
+        "--candidate-micro-batch-size",
+        str(args.candidate_micro_batch_size),
         "--worker-position",
         str(position),
         "--worker-output",
@@ -223,6 +250,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--temperature", type=float, default=2.0)
     parser.add_argument("--alpha", type=float, default=1.0)
     parser.add_argument("--max-length", type=int, default=2560)
+    parser.add_argument("--candidate-micro-batch-size", type=int, default=1, choices=(1, 2, 4))
     parser.add_argument("--summary", default="reports/v7_gradient_analysis.json")
     parser.add_argument("--report", default="reports/v7_gradient_analysis.md")
     parser.add_argument(
@@ -262,39 +290,61 @@ def run_worker(
     index = indices[args.worker_position]
     record = records[index]
     candidates = [CandidateRecord.model_validate(item) for item in pool_rows[index]["candidates"]]
-    scores = score_candidate_sequences(
-        model, tokenizer, record, candidates, max_length=args.max_length, alpha=args.alpha
-    ).unsqueeze(0)
+    score_parts: list[torch.Tensor] = []
+    with torch.no_grad():
+        for start in range(0, len(candidates), args.candidate_micro_batch_size):
+            part = score_candidate_sequences(
+                model,
+                tokenizer,
+                record,
+                candidates[start : start + args.candidate_micro_batch_size],
+                max_length=args.max_length,
+                alpha=args.alpha,
+            )
+            score_parts.append(part.detach().float().cpu())
+    score_values = torch.cat(score_parts).unsqueeze(0)
     teacher = torch.tensor(
         [cache_by_id[record.id]["candidate_probabilities"]],
         dtype=torch.float32,
-        device=scores.device,
     )
-    candidate_loss = fixed_support_kd_loss(
-        scores, teacher, "candidate", temperature=args.temperature
-    )
-    class_loss = fixed_support_kd_loss(scores, teacher, "class", temperature=args.temperature)
-    intra_loss = candidate_loss - class_loss
-    if not all(torch.isfinite(value) for value in (candidate_loss, class_loss, intra_loss)):
-        raise FloatingPointError(f"non-finite loss for {record.id}")
-
-    candidate_grads = cpu_gradients(
-        torch.autograd.grad(candidate_loss, parameters, retain_graph=True, allow_unused=True)
-    )
-    inter_grads = cpu_gradients(
-        torch.autograd.grad(class_loss, parameters, retain_graph=True, allow_unused=True)
-    )
-    intra_grads = cpu_gradients(torch.autograd.grad(intra_loss, parameters, allow_unused=True))
+    values, score_weights = loss_values_and_score_weights(score_values, teacher, args.temperature)
+    shapes = [tuple(parameter.shape) for parameter in parameters]
+    candidate_grads = [torch.zeros(shape, dtype=torch.float32) for shape in shapes]
+    inter_grads = [torch.zeros(shape, dtype=torch.float32) for shape in shapes]
+    intra_grads = [torch.zeros(shape, dtype=torch.float32) for shape in shapes]
+    destinations = {
+        "candidate": candidate_grads,
+        "class": inter_grads,
+        "intra": intra_grads,
+    }
+    for start in range(0, len(candidates), args.candidate_micro_batch_size):
+        end = min(start + args.candidate_micro_batch_size, len(candidates))
+        part_scores = score_candidate_sequences(
+            model,
+            tokenizer,
+            record,
+            candidates[start:end],
+            max_length=args.max_length,
+            alpha=args.alpha,
+        )
+        for objective_index, objective in enumerate(("candidate", "class", "intra")):
+            device_gradients = torch.autograd.grad(
+                part_scores,
+                parameters,
+                grad_outputs=score_weights[objective][start:end].to(part_scores.device),
+                retain_graph=objective_index < 2,
+                allow_unused=True,
+            )
+            add_gradients(destinations[objective], device_gradients, 1.0)
+            del device_gradients
+        del part_scores
+        gc.collect()
+        torch.cuda.empty_cache()
     for gradients in (candidate_grads, inter_grads, intra_grads):
         if any(
             gradient is not None and not torch.isfinite(gradient).all() for gradient in gradients
         ):
             raise FloatingPointError(f"non-finite gradient for {record.id}")
-    values = {
-        "candidate": float(candidate_loss.detach().cpu()),
-        "class": float(class_loss.detach().cpu()),
-        "intra": float(intra_loss.detach().cpu()),
-    }
     sample = {
         "sample_id": record.id,
         "equivalence_type": pool_rows[index]["equivalence_type"],
@@ -445,6 +495,7 @@ def main() -> int:
         "temperature": args.temperature,
         "alpha": args.alpha,
         "max_length": args.max_length,
+        "candidate_micro_batch_size": args.candidate_micro_batch_size,
         "git": git_state(),
         "environment": {
             "python": platform.python_version(),
@@ -479,6 +530,7 @@ def main() -> int:
 - 触发原因：Balanced-336 训练 1 轮时，`Class KD` 明显较差；训练 4 轮后差距缩小，因此检查它是否只是训练信号较弱。
 - 模型固定为正式的初始学生模型。样本固定为 Balanced-336 在随机种子 42、首轮训练的第一组，共 {args.subset_size} 条。
 - 每条样本都在全新进程中单独加载模型，结束后释放显存；最后只在普通内存中汇总。这样只解决显存累积，不改变样本、模型或计算公式。
+- 每条样本内再把 4 个候选逐个计算。先精确求出损失对 4 个候选分数的影响，再按链式法则逐个求参数信号并相加；单元测试确认它与一次性直接求导一致。
 - 模型关闭随机丢弃，因此同一输入可重复计算。这里分析的是训练目标本身，不代表一次真实训练更新。
 - 公式为 `L_candidate = L_inter + L_intra`，`L_class = L_inter`。其中 `inter` 是不同功能类别之间的信号，`intra` 是同一功能类别内部不同写法之间的信号。
 
