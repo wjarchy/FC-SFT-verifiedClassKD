@@ -6,8 +6,8 @@
 
 - `快速试验结果模板.md`：V5 的 Opportunity、Gap、四分支和最终判定统一模板。
 - `v7_execution_ledger.md`：V7 灾后恢复、执行命令、阶段状态与关键决策的连续账本。
-- `v7_recovery_smoke.md`：V7 最低限度环境、代码和数值 smoke 结果（完成后生成）。
-- `v7_data_recovery.md`：Formal 数据恢复、计数、哈希和偏差解释（完成后生成）。
+- `v7_recovery_smoke.md`：V7 最低限度环境、代码和数值检查结果。
+- `v7_data_recovery.md`：正式数据恢复、计数、哈希和偏差解释。
 - `v7_s0_recovery.md`：Formal S0 重训、Validation 选模、Internal 预测与资产哈希。
 - `v7_teacher_cache_recovery.md`：固定 K=4 Teacher 概率、entropy 与缓存哈希。
 - `v7_analysis_threshold_freeze.md`：在 KD outcome 前冻结的 S0 confidence / Teacher entropy 三分位。
@@ -21,6 +21,7 @@
 - `v7_gradient_analysis.md`：固定初始学生模型上预定义 16 条样本的训练信号分析；已完成并独立核对。
 - `v7阶段审查检查点.md`：数据规模对比完成、训练信号分析尚未完成时，供用户审查的通俗中文暂停报告。
 - `v7_final_decision.md`：V7 最终科研判定；结论为 `V7_CONDITIONAL_RESCUE`，即“有条件保留”。
+- `v7完整实验报告.md`：V7 全流程中文总报告，逐项汇总环境、数据、六个蒸馏分支、分组分析、机制检查、限制和最终判定。
 - 后续新增 `opportunity_report.json/.csv` 与 `opportunity_examples.jsonl`：V5 第一生死 Gate；当前尚未生成。
 - `实验环境记录.md`：RTX 3090、关键依赖和 Qwen3-0.6B 模型版本。
 - `冒烟与小样本过拟合结果.md`：真实 GPU 冒烟测试与 8 条样本过拟合结果。

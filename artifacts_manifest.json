@@ -380,6 +380,15 @@
       "sha256": "4ca27a20cbb3976c7b3d31733dbe4323263d81ef2bff169f81cdc55a142b9b5a",
       "weak_s0": "SKIPPED",
       "basis": "Equiv-All-1393x1 is directionally positive on Full and Internal-Equiv and fixed-support confidence improves monotonically from high to low, but main intervals cross zero, only one seed is available, free-generation correctness contradicts the difficulty hypothesis, and teacher entropy is not monotonic"
+    },
+    {
+      "name": "v7_comprehensive_report_2026-10-08",
+      "status": "complete",
+      "path": "reports/v7完整实验报告.md",
+      "sha256": "a981851ec574b58134eb589a55fb51013943b31ea6f892d8f7790c54f50f4e9e",
+      "evidence_git_sha": "fa1323e2719b9420ac8d0d469a73e7b4cbbfe9e7",
+      "decision": "V7_CONDITIONAL_RESCUE",
+      "scope": "Chinese comprehensive report consolidating all completed V7 experiments; no new experiment or decision change"
     }
   ]
 }
